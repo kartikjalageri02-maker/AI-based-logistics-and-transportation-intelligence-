@@ -3,6 +3,8 @@
 > **"Smarter Response. Safer Lives. In Disaster Situations."**  
 > *From Field Reports to Optimized Resource Allocation, Adaptive Transportation, and Safe Delivery.*
 
+### 🌐 [Live Interactive Web App (Click to Open)](https://kartikjalageri02-maker.github.io/AI-based-logistics-and-transportation-intelligence-/)
+
 ---
 
 ## 📌 Problem Overview & Solution Architecture
