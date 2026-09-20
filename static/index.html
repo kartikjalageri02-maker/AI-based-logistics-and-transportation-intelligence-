@@ -20,6 +20,128 @@
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white">
 
+    <!-- ===================================================================== -->
+    <!-- ROLE-FIRST AUTHENTICATION GATE MODAL                                   -->
+    <!-- ===================================================================== -->
+    <div id="authModal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6">
+            
+            <!-- Branding Header -->
+            <div class="text-center space-y-2">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-blue-600 text-white shadow-md shadow-blue-600/20 mb-1">
+                    <i class="fas fa-truck-ramp-box text-xl"></i>
+                </div>
+                <h2 class="text-xl font-extrabold text-slate-900 tracking-tight">AI Disaster Logistics Portal</h2>
+                <p class="text-xs text-slate-500">Autonomous Disaster Assessment, Allocation & GIS Routing</p>
+            </div>
+
+            <!-- STEP 1: Select Operational Role -->
+            <div id="authStepRole" class="space-y-4">
+                <div class="border-b border-slate-100 pb-2">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600 font-mono">Step 1 of 2</span>
+                    <h3 class="text-base font-bold text-slate-900 mt-0.5">Select Your Operational Role</h3>
+                    <p class="text-xs text-slate-500">Dashboards and actions are filtered according to your role permission.</p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Role 1: Admin -->
+                    <button type="button" onclick="Auth.selectRole('admin')" 
+                        class="p-4 rounded-xl border border-slate-200 hover:border-purple-500 hover:bg-purple-50/40 text-left transition group shadow-2xs">
+                        <div class="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mb-2 group-hover:scale-110 transition">
+                            <i class="fas fa-shield-halved"></i>
+                        </div>
+                        <div class="font-bold text-xs text-slate-900">Operations Admin</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">Full access to all 5 dashboards & live triage</div>
+                    </button>
+
+                    <!-- Role 2: Field Officer -->
+                    <button type="button" onclick="Auth.selectRole('officer')" 
+                        class="p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 text-left transition group shadow-2xs">
+                        <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-2 group-hover:scale-110 transition">
+                            <i class="fas fa-file-pen"></i>
+                        </div>
+                        <div class="font-bold text-xs text-slate-900">Disaster Area Officer</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">Field assessment & LoRa casualty reports</div>
+                    </button>
+
+                    <!-- Role 3: Hub Logistics -->
+                    <button type="button" onclick="Auth.selectRole('inventory')" 
+                        class="p-4 rounded-xl border border-slate-200 hover:border-amber-500 hover:bg-amber-50/40 text-left transition group shadow-2xs">
+                        <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center mb-2 group-hover:scale-110 transition">
+                            <i class="fas fa-warehouse"></i>
+                        </div>
+                        <div class="font-bold text-xs text-slate-900">Hub Logistics Officer</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">Warehouse inventory & AI allocation solver</div>
+                    </button>
+
+                    <!-- Role 4: Driver -->
+                    <button type="button" onclick="Auth.selectRole('driver')" 
+                        class="p-4 rounded-xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/40 text-left transition group shadow-2xs">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center mb-2 group-hover:scale-110 transition">
+                            <i class="fas fa-route"></i>
+                        </div>
+                        <div class="font-bold text-xs text-slate-900">Relief Fleet Driver</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">Turn-by-turn routes & offline map downloads</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 2: Enter Credentials -->
+            <div id="authStepCreds" class="hidden space-y-4">
+                <div class="border-b border-slate-100 pb-2 flex items-center justify-between">
+                    <div>
+                        <span class="text-[11px] font-bold uppercase tracking-wider text-blue-600 font-mono">Step 2 of 2</span>
+                        <h3 class="text-base font-bold text-slate-900 mt-0.5">Enter Demo Credentials</h3>
+                    </div>
+                    <span id="selectedRoleDisplay" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200"></span>
+                </div>
+
+                <!-- Credentials Callout -->
+                <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
+                    <div>
+                        <span class="text-slate-500 font-medium">Demo Access:</span>
+                        <div class="font-mono text-slate-900 font-bold mt-0.5">Username: <span class="text-blue-600">abc</span> | Password: <span class="text-blue-600">123</span></div>
+                    </div>
+                    <button type="button" onclick="document.getElementById('inputAuthUser').value='abc'; document.getElementById('inputAuthPass').value='123';"
+                        class="px-2.5 py-1 rounded bg-white hover:bg-slate-100 text-slate-700 font-semibold border border-slate-200 text-[11px] transition shadow-2xs">
+                        Auto-Fill
+                    </button>
+                </div>
+
+                <!-- Error Notice -->
+                <div id="authError" class="hidden p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-medium"></div>
+
+                <form onsubmit="event.preventDefault(); Auth.login(document.getElementById('inputAuthUser').value, document.getElementById('inputAuthPass').value);" class="space-y-3 text-xs">
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Username</label>
+                        <input type="text" id="inputAuthUser" required value="abc" placeholder="Enter username (abc)"
+                            class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-slate-900 font-mono focus:outline-none focus:border-blue-500 shadow-2xs">
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold text-slate-700 mb-1">Password</label>
+                        <input type="password" id="inputAuthPass" required value="123" placeholder="Enter password (123)"
+                            class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-slate-900 font-mono focus:outline-none focus:border-blue-500 shadow-2xs">
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <button type="button" onclick="Auth.goToRoleStep()" 
+                            class="text-xs text-slate-500 hover:text-slate-800 font-medium flex items-center space-x-1">
+                            <i class="fas fa-arrow-left text-[10px]"></i>
+                            <span>Change Role</span>
+                        </button>
+                        <button type="submit" 
+                            class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition shadow-sm flex items-center space-x-2">
+                            <span>Authenticate & Enter</span>
+                            <i class="fas fa-arrow-right text-xs"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
     <!-- Top Navigation Header -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6">
@@ -41,23 +163,28 @@
                     </div>
                 </div>
 
-                <!-- Clock & Global Actions -->
+                <!-- User Session Profile & Actions -->
                 <div class="flex items-center space-x-3 text-xs">
+                    <!-- Logged in role profile chip -->
+                    <div id="userProfileChip" class="hidden"></div>
+
                     <div class="hidden sm:flex flex-col text-right font-mono">
-                        <span class="text-slate-400 text-[10px] uppercase tracking-wider">Command Center Time</span>
+                        <span class="text-slate-400 text-[10px] uppercase tracking-wider">Command Clock</span>
                         <span id="navClock" class="text-slate-700 font-bold">19:50:00 (IST)</span>
                     </div>
+
                     <div class="h-6 w-px bg-slate-200"></div>
+
                     <button onclick="App.resetSimulation()" 
                         class="px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium flex items-center space-x-1.5 transition">
                         <i class="fas fa-rotate-left text-slate-400"></i>
-                        <span>Reset Simulation</span>
+                        <span>Reset Data</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Task Dashboard Switcher Tabs -->
-            <nav class="flex items-center space-x-1 overflow-x-auto py-2 text-xs">
+            <!-- Task Dashboard Switcher Tabs (Filtered by Role) -->
+            <nav id="dashboardNavTabs" class="flex items-center space-x-1 overflow-x-auto py-2 text-xs">
                 <button onclick="App.switchDashboard('admin')" data-tab="admin"
                     class="nav-tab-btn active px-3.5 py-2 rounded-lg border border-transparent flex items-center space-x-2 shrink-0">
                     <i class="fas fa-shield-halved text-sm"></i>
@@ -109,7 +236,7 @@
                     <button onclick="App.switchDashboard('officer')" 
                         class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center space-x-1.5 transition shadow-sm">
                         <i class="fas fa-plus"></i>
-                        <span>New Disaster Field Report</span>
+                        <span>New Field Report</span>
                     </button>
                 </div>
             </div>
@@ -131,10 +258,10 @@
                     <div>
                         <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Active Emergencies</div>
                         <div id="adminActiveReports" class="text-2xl font-extrabold font-mono text-slate-900 mt-1">2</div>
-                        <div class="text-[11px] text-blue-600 font-medium mt-0.5"><i class="fas fa-tower-broadcast mr-1"></i> Ingested in Hub</div>
+                        <div class="text-[11px] text-blue-600 font-medium mt-0.5"><i class="fas fa-file-waveform mr-1"></i> Central Hub Ingested</div>
                     </div>
                     <div class="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
-                        <i class="fas fa-file-waveform text-lg"></i>
+                        <i class="fas fa-clipboard-list text-lg"></i>
                     </div>
                 </div>
 
@@ -142,7 +269,7 @@
                     <div>
                         <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Safe Active Routes</div>
                         <div id="adminSafeRoutes" class="text-2xl font-extrabold font-mono text-emerald-600 mt-1">2 / 3</div>
-                        <div class="text-[11px] text-amber-600 font-medium mt-0.5"><i class="fas fa-road-barrier mr-1"></i> 1 Landslide Hazard</div>
+                        <div class="text-[11px] text-amber-600 font-medium mt-0.5"><i class="fas fa-road-barrier mr-1"></i> 1 Landslide Blocked</div>
                     </div>
                     <div class="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
                         <i class="fas fa-route text-lg"></i>
@@ -244,7 +371,7 @@
                     <div class="pb-3 border-b border-slate-100 flex items-center justify-between">
                         <div>
                             <h3 class="text-base font-bold text-slate-900">Send New Disaster Assessment Report</h3>
-                            <p class="text-xs text-slate-500">Reports are transmitted to the Central Hub and evaluated by AI.</p>
+                            <p class="text-xs text-slate-500">Reports are processed immediately by the AI Severity Engine & Hub Allocator.</p>
                         </div>
                         <button type="button" onclick="App.useCurrentLocation()" 
                             class="px-2.5 py-1 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium flex items-center space-x-1.5 transition">

@@ -85,24 +85,42 @@ const DriverSim = {
         try {
             AudioController.playHazardAlert();
 
-            const res = await fetch('/api/driver/incident', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    driver: this.activeVehicle,
-                    route_id: "ROUTE-1",
-                    type: hazardType,
-                    coordinates: [30.21, 78.86]
-                })
-            });
+            let success = false;
+            try {
+                const res = await fetch('/api/driver/incident', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        driver: this.activeVehicle,
+                        route_id: "ROUTE-1",
+                        type: hazardType,
+                        coordinates: [30.21, 78.86]
+                    })
+                });
+                if (res.ok) success = true;
+            } catch (netErr) {}
 
-            const data = await res.json();
-            
-            this.showToast(`⚠️ Hazard Broadcast Sent! Central Hub notified: Route 1 closed, recalculating fleet routes.`, 'danger');
-
-            if (window.App) {
-                await window.App.fetchStatus();
+            // Handle client-side state update for GitHub Pages / static mode
+            if (window.App && window.App.state) {
+                const r1 = window.App.state.routes.find(r => r.id === "ROUTE-1");
+                if (r1) {
+                    r1.status = "BLOCKED";
+                    r1.is_blocked = true;
+                    r1.risk_score = 99;
+                    r1.color = "#ef4444";
+                    r1.description = `HAZARD REPORTED by ${this.activeVehicle}: ${hazardType}`;
+                }
+                const r2 = window.App.state.routes.find(r => r.id === "ROUTE-2");
+                if (r2) {
+                    r2.status = "RECOMMENDED (RE-ROUTED)";
+                    r2.color = "#059669";
+                }
+                window.App.addLog(`⚠️ HAZARD REPORTED: ${this.activeVehicle} reported ${hazardType} on Route 1. Fleet dynamically re-routed.`);
+                window.App.saveState();
+                window.App.renderAll();
             }
+
+            this.showToast(`⚠️ Hazard Broadcast Sent! Central Hub notified: Route 1 closed, recalculating fleet routes.`, 'danger');
 
             this.navSteps.splice(2, 0, {
                 km: "21.0 km",

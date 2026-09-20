@@ -1,5 +1,5 @@
 /**
- * AI Disaster Logistics Controller - Multi-Dashboard Router Edition
+ * AI Disaster Logistics Controller - Role-Based Authentication & Standalone Data Engine Edition
  * Minimalist White Architecture
  */
 
@@ -42,22 +42,275 @@ const AudioController = {
     }
 };
 
+// Default Simulation Data Package
+const DEFAULT_CLIENT_STATE = {
+    hub: {
+        id: "HUB-01",
+        name: "State Disaster Operations Center (Main Hub)",
+        lat: 30.1450,
+        lon: 78.7800,
+        contact: "+91-1800-DISASTER",
+        status: "ACTIVE_COMMAND"
+    },
+    inventory: {
+        ambulances: { total: 3, allocated: 0, available: 3 },
+        trucks: { total: 5, allocated: 0, available: 5 },
+        boats: { total: 3, allocated: 0, available: 3 },
+        jcbs: { total: 2, allocated: 0, available: 2 },
+        small_vehicles: { total: 4, allocated: 0, available: 4 },
+        food_packs: { total: 1200, allocated: 0, available: 1200 },
+        medicines: { total: 850, allocated: 0, available: 850 },
+        water_liters: { total: 5000, allocated: 0, available: 5000 },
+        tents: { total: 200, allocated: 0, available: 200 }
+    },
+    locations: [
+        {
+            id: "LOC-A",
+            name: "Location A (Flooded Town - Rudra Valley)",
+            lat: 30.2850,
+            lon: 78.9800,
+            condition: "Flooded Area & Bridge Stress",
+            affected_people: 650,
+            medical_urgency: 9,
+            road_condition: "Flooded / Blocked Bridges",
+            communication_mode: "Cellular 4G",
+            demand: { ambulances: 2, food_packs: 400, medicines: 300, water_liters: 2000, boats: 2, tents: 50 },
+            reported_at: "10 mins ago"
+        },
+        {
+            id: "LOC-B",
+            name: "Location B (Flooded Valley - Chamoli East)",
+            lat: 30.3400,
+            lon: 79.1500,
+            condition: "Flash Flood & Water Inundation",
+            affected_people: 320,
+            medical_urgency: 6,
+            road_condition: "Partially Submerged / Narrow Roads",
+            communication_mode: "LoRa Gateway (Remote)",
+            lora_metadata: { freq_mhz: 868.1, rssi_dbm: -108, snr_db: 6.8, raw_hex: "4C4F43423A464C4F4F443A504F50333230" },
+            demand: { ambulances: 2, food_packs: 250, medicines: 180, water_liters: 1200, boats: 1, tents: 80 },
+            reported_at: "18 mins ago"
+        }
+    ],
+    hazards: [
+        {
+            id: "HAZ-01",
+            name: "Major Landslide - Hill Pass Road",
+            lat: 30.2200,
+            lon: 78.8900,
+            type: "Landslide (Blocked Road)",
+            severity: "CRITICAL_BLOCKAGE",
+            affected_route: "Route 3",
+            clearing_equipment: "JCB / Excavator",
+            is_cleared: false
+        }
+    ],
+    routes: [
+        {
+            id: "ROUTE-1",
+            name: "Route 1 (Primary - Safer Ridge Corridor)",
+            priority: 1,
+            status: "RECOMMENDED",
+            description: "Highest Priority, safe elevated road, bypasses flood plain",
+            distance_km: 34.2,
+            estimated_time_min: 52,
+            risk_score: 14,
+            color: "#059669",
+            path: [[30.1450, 78.7800], [30.1720, 78.8150], [30.2100, 78.8600], [30.2450, 78.9100], [30.2700, 78.9500], [30.2850, 78.9800]]
+        },
+        {
+            id: "ROUTE-2",
+            name: "Route 2 (Alternative - Valley Bypass)",
+            priority: 2,
+            status: "ALTERNATIVE",
+            description: "Secondary safe option with slight gravel roughness",
+            distance_km: 41.5,
+            estimated_time_min: 68,
+            risk_score: 38,
+            color: "#d97706",
+            path: [[30.1450, 78.7800], [30.1600, 78.7500], [30.1950, 78.7900], [30.2300, 78.8500], [30.2650, 78.9300], [30.2850, 78.9800]]
+        },
+        {
+            id: "ROUTE-3",
+            name: "Route 3 (Secondary Option - Currently Blocked)",
+            priority: 3,
+            status: "BLOCKED",
+            description: "Direct river gorge highway - BLOCKED by active landslide at Km 22",
+            distance_km: 28.0,
+            estimated_time_min: 0,
+            risk_score: 96,
+            color: "#ef4444",
+            is_blocked: true,
+            block_point: [30.2200, 78.8900],
+            path: [[30.1450, 78.7800], [30.1800, 78.8300], [30.2200, 78.8900], [30.2500, 78.9400], [30.2850, 78.9800]]
+        }
+    ],
+    deliveries: [
+        { id: "DEL-101", vehicle: "Emergency Ambulance AMB-01", destination: "Location A (Flooded Town)", route: "Route 1 (Primary)", status: "EN_ROUTE", cargo: "Trauma kits & 2 Paramedics", eta_min: 18 }
+    ],
+    driver_logs: [
+        { time: "19:35", event: "Main Hub dispatched AMB-01 via Route 1 (Safe Corridor)" },
+        { time: "19:38", event: "LoRa Packet RX: Location B confirmed battery backup online" },
+        { time: "19:42", event: "Driver AMB-01 cached offline GIS vector map" }
+    ]
+};
+
+// Role-Based Authentication Manager
+const Auth = {
+    selectedRole: null,
+    currentSession: null,
+
+    roleDefinitions: {
+        admin: {
+            title: "Disaster Operations Commander (Admin)",
+            allowedTabs: ['admin', 'officer', 'inventory', 'allocation', 'driver'],
+            defaultTab: 'admin',
+            badgeClass: 'bg-purple-50 text-purple-700 border-purple-200'
+        },
+        officer: {
+            title: "Disaster Area Officer",
+            allowedTabs: ['officer'],
+            defaultTab: 'officer',
+            badgeClass: 'bg-blue-50 text-blue-700 border-blue-200'
+        },
+        inventory: {
+            title: "Hub Logistics Officer",
+            allowedTabs: ['inventory', 'allocation'],
+            defaultTab: 'inventory',
+            badgeClass: 'bg-amber-50 text-amber-700 border-amber-200'
+        },
+        driver: {
+            title: "Rescue Fleet Driver",
+            allowedTabs: ['driver'],
+            defaultTab: 'driver',
+            badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+        }
+    },
+
+    init() {
+        const saved = sessionStorage.getItem('disaster_auth_session');
+        if (saved) {
+            this.currentSession = JSON.parse(saved);
+            this.hideAuthModal();
+            this.applyRolePermissions();
+        } else {
+            this.showAuthModal();
+        }
+    },
+
+    showAuthModal() {
+        const modal = document.getElementById('authModal');
+        if (modal) modal.classList.remove('hidden');
+        this.goToRoleStep();
+    },
+
+    hideAuthModal() {
+        const modal = document.getElementById('authModal');
+        if (modal) modal.classList.add('hidden');
+    },
+
+    selectRole(roleKey) {
+        this.selectedRole = roleKey;
+        const roleDef = this.roleDefinitions[roleKey];
+        document.getElementById('authStepRole').classList.add('hidden');
+        document.getElementById('authStepCreds').classList.remove('hidden');
+        document.getElementById('selectedRoleDisplay').textContent = roleDef.title;
+        document.getElementById('authError').classList.add('hidden');
+        document.getElementById('inputAuthUser').focus();
+    },
+
+    goToRoleStep() {
+        this.selectedRole = null;
+        document.getElementById('authStepRole').classList.remove('hidden');
+        document.getElementById('authStepCreds').classList.add('hidden');
+        document.getElementById('authError').classList.add('hidden');
+    },
+
+    login(username, password) {
+        if (username.trim() === 'abc' && password.trim() === '123' && this.selectedRole) {
+            const roleDef = this.roleDefinitions[this.selectedRole];
+            this.currentSession = {
+                username: username,
+                role: this.selectedRole,
+                title: roleDef.title
+            };
+            sessionStorage.setItem('disaster_auth_session', JSON.stringify(this.currentSession));
+            this.hideAuthModal();
+            this.applyRolePermissions();
+            App.switchDashboard(roleDef.defaultTab);
+            AudioController.playSuccessChime();
+            DriverSim.showToast(`Welcome ${roleDef.title}! Logged in as ${username}.`, 'success');
+        } else {
+            const errEl = document.getElementById('authError');
+            errEl.textContent = 'Invalid credentials! Use demo username "abc" and password "123".';
+            errEl.classList.remove('hidden');
+            AudioController.playHazardAlert();
+        }
+    },
+
+    logout() {
+        sessionStorage.removeItem('disaster_auth_session');
+        this.currentSession = null;
+        this.selectedRole = null;
+        this.showAuthModal();
+    },
+
+    applyRolePermissions() {
+        if (!this.currentSession) return;
+        const roleDef = this.roleDefinitions[this.currentSession.role];
+
+        // Update profile chip in top header
+        const chip = document.getElementById('userProfileChip');
+        if (chip) {
+            chip.classList.remove('hidden');
+            chip.className = `flex items-center space-x-2 px-2.5 py-1 rounded-full border text-xs font-semibold ${roleDef.badgeClass}`;
+            chip.innerHTML = `
+                <i class="fas fa-user-shield"></i>
+                <span>${roleDef.title} (${this.currentSession.username})</span>
+                <button onclick="Auth.logout()" class="ml-1 text-slate-500 hover:text-red-600" title="Switch Role / Logout">
+                    <i class="fas fa-right-from-bracket"></i>
+                </button>
+            `;
+        }
+
+        // Filter navigation buttons
+        document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+            const tabName = btn.dataset.tab;
+            if (roleDef.allowedTabs.includes(tabName)) {
+                btn.classList.remove('hidden');
+            } else {
+                btn.classList.add('hidden');
+            }
+        });
+    }
+};
+
 const App = {
     state: null,
     currentDashboard: 'admin',
 
     async init() {
-        this.setupRouter();
         await this.fetchStatus();
         DriverSim.init();
+        Auth.init();
+        this.setupRouter();
         this.setupForms();
         this.startClock();
     },
 
     setupRouter() {
-        // Handle hash navigation
         const handleHash = () => {
             const hash = window.location.hash.replace('#', '');
+            if (Auth.currentSession) {
+                const roleDef = Auth.roleDefinitions[Auth.currentSession.role];
+                if (roleDef.allowedTabs.includes(hash)) {
+                    this.switchDashboard(hash, false);
+                    return;
+                } else {
+                    this.switchDashboard(roleDef.defaultTab, false);
+                    return;
+                }
+            }
             if (['admin', 'officer', 'inventory', 'allocation', 'driver'].includes(hash)) {
                 this.switchDashboard(hash, false);
             } else {
@@ -66,16 +319,26 @@ const App = {
         };
 
         window.addEventListener('hashchange', handleHash);
-        handleHash();
+        if (Auth.currentSession) {
+            handleHash();
+        }
     },
 
     switchDashboard(name, updateHash = true) {
+        // Enforce RBAC permission check
+        if (Auth.currentSession) {
+            const roleDef = Auth.roleDefinitions[Auth.currentSession.role];
+            if (!roleDef.allowedTabs.includes(name)) {
+                name = roleDef.defaultTab;
+            }
+        }
+
         this.currentDashboard = name;
         if (updateHash) {
             window.location.hash = name;
         }
 
-        // Update nav button states
+        // Update nav buttons
         document.querySelectorAll('.nav-tab-btn').forEach(btn => {
             if (btn.dataset.tab === name) {
                 btn.classList.add('active');
@@ -84,24 +347,20 @@ const App = {
             }
         });
 
-        // Hide all dashboard views
+        // Hide all views
         document.querySelectorAll('.dashboard-view').forEach(view => {
             view.classList.add('hidden');
         });
 
-        // Show active dashboard view
+        // Show active view
         const targetView = document.getElementById(`view-${name}`);
         if (targetView) {
             targetView.classList.remove('hidden');
         }
 
-        // Leaflet map refresh when returning to map-containing views
-        if (name === 'admin') {
-            setTimeout(() => {
-                if (disasterMap) {
-                    disasterMap.invalidateSize();
-                }
-            }, 100);
+        // Map invalidate size
+        if (name === 'admin' && typeof disasterMap !== 'undefined' && disasterMap) {
+            setTimeout(() => disasterMap.invalidateSize(), 100);
         }
     },
 
@@ -112,148 +371,34 @@ const App = {
             const data = await res.json();
             this.state = data;
         } catch (err) {
-            // Standalone GitHub Pages Mode (zero backend required)
+            // Standalone GitHub Pages Mode
             const saved = localStorage.getItem('disaster_hub_state');
             if (saved) {
                 this.state = JSON.parse(saved);
             } else {
-                this.state = {
-                    hub: {
-                        id: "HUB-01",
-                        name: "State Disaster Operations Center (Main Hub)",
-                        lat: 30.1450,
-                        lon: 78.7800,
-                        contact: "+91-1800-DISASTER",
-                        status: "ACTIVE_COMMAND"
-                    },
-                    inventory: {
-                        ambulances: { total: 3, allocated: 0, available: 3 },
-                        trucks: { total: 5, allocated: 0, available: 5 },
-                        boats: { total: 3, allocated: 0, available: 3 },
-                        jcbs: { total: 2, allocated: 0, available: 2 },
-                        small_vehicles: { total: 4, allocated: 0, available: 4 },
-                        food_packs: { total: 1200, allocated: 0, available: 1200 },
-                        medicines: { total: 850, allocated: 0, available: 850 },
-                        water_liters: { total: 5000, allocated: 0, available: 5000 },
-                        tents: { total: 200, allocated: 0, available: 200 }
-                    },
-                    locations: [
-                        {
-                            id: "LOC-A",
-                            name: "Location A (Flooded Town - Rudra Valley)",
-                            lat: 30.2850,
-                            lon: 78.9800,
-                            condition: "Flooded Area & Bridge Stress",
-                            affected_people: 650,
-                            medical_urgency: 9,
-                            road_condition: "Flooded / Blocked Bridges",
-                            communication_mode: "Cellular 4G",
-                            demand: { ambulances: 2, food_packs: 400, medicines: 300, water_liters: 2000, boats: 2, tents: 50 },
-                            reported_at: "10 mins ago"
-                        },
-                        {
-                            id: "LOC-B",
-                            name: "Location B (Flooded Valley - Chamoli East)",
-                            lat: 30.3400,
-                            lon: 79.1500,
-                            condition: "Flash Flood & Water Inundation",
-                            affected_people: 320,
-                            medical_urgency: 6,
-                            road_condition: "Partially Submerged / Narrow Roads",
-                            communication_mode: "LoRa Gateway (Remote)",
-                            lora_metadata: { freq_mhz: 868.1, rssi_dbm: -108, snr_db: 6.8, raw_hex: "4C4F43423A464C4F4F443A504F50333230" },
-                            demand: { ambulances: 2, food_packs: 250, medicines: 180, water_liters: 1200, boats: 1, tents: 80 },
-                            reported_at: "18 mins ago"
-                        }
-                    ],
-                    hazards: [
-                        {
-                            id: "HAZ-01",
-                            name: "Major Landslide - Hill Pass Road",
-                            lat: 30.2200,
-                            lon: 78.8900,
-                            type: "Landslide (Blocked Road)",
-                            severity: "CRITICAL_BLOCKAGE",
-                            affected_route: "Route 3",
-                            clearing_equipment: "JCB / Excavator",
-                            is_cleared: false
-                        }
-                    ],
-                    routes: [
-                        {
-                            id: "ROUTE-1",
-                            name: "Route 1 (Primary - Safer Ridge Corridor)",
-                            priority: 1,
-                            status: "RECOMMENDED",
-                            description: "Highest Priority, safe elevated road, bypasses flood plain",
-                            distance_km: 34.2,
-                            estimated_time_min: 52,
-                            risk_score: 14,
-                            color: "#059669",
-                            path: [[30.1450, 78.7800], [30.1720, 78.8150], [30.2100, 78.8600], [30.2450, 78.9100], [30.2700, 78.9500], [30.2850, 78.9800]]
-                        },
-                        {
-                            id: "ROUTE-2",
-                            name: "Route 2 (Alternative - Valley Bypass)",
-                            priority: 2,
-                            status: "ALTERNATIVE",
-                            description: "Secondary safe option with slight gravel roughness",
-                            distance_km: 41.5,
-                            estimated_time_min: 68,
-                            risk_score: 38,
-                            color: "#d97706",
-                            path: [[30.1450, 78.7800], [30.1600, 78.7500], [30.1950, 78.7900], [30.2300, 78.8500], [30.2650, 78.9300], [30.2850, 78.9800]]
-                        },
-                        {
-                            id: "ROUTE-3",
-                            name: "Route 3 (Secondary Option - Currently Blocked)",
-                            priority: 3,
-                            status: "BLOCKED",
-                            description: "Direct river gorge highway - BLOCKED by active landslide at Km 22",
-                            distance_km: 28.0,
-                            estimated_time_min: 0,
-                            risk_score: 96,
-                            color: "#ef4444",
-                            is_blocked: true,
-                            block_point: [30.2200, 78.8900],
-                            path: [[30.1450, 78.7800], [30.1800, 78.8300], [30.2200, 78.8900], [30.2500, 78.9400], [30.2850, 78.9800]]
-                        }
-                    ],
-                    deliveries: [
-                        { id: "DEL-101", vehicle: "Emergency Ambulance AMB-01", destination: "Location A (Flooded Town)", route: "Route 1 (Primary)", status: "EN_ROUTE", cargo: "Trauma kits & 2 Paramedics", eta_min: 18 }
-                    ],
-                    driver_logs: [
-                        { time: "19:35", event: "Main Hub dispatched AMB-01 via Route 1 (Safe Corridor)" },
-                        { time: "19:38", event: "LoRa Packet RX: Location B confirmed battery backup online" },
-                        { time: "19:42", event: "Driver AMB-01 cached offline GIS vector map" }
-                    ]
-                };
+                this.state = JSON.parse(JSON.stringify(DEFAULT_CLIENT_STATE));
             }
         }
         this.renderAll();
     },
 
+    saveState() {
+        if (this.state) {
+            localStorage.setItem('disaster_hub_state', JSON.stringify(this.state));
+        }
+    },
+
     renderAll() {
         if (!this.state) return;
 
-        // 1. Render Admin Dashboard
         this.renderAdminView();
-
-        // 2. Render Officer View
         this.renderOfficerView();
-
-        // 3. Render Inventory View
         this.renderInventoryView();
-
-        // 4. Render Allocation View
         this.renderAllocationView();
-
-        // 5. Render Driver View
         DriverSim.renderDriverTerminal();
     },
 
     renderAdminView() {
-        // KPIs
         const totalPeople = this.state.locations.reduce((acc, loc) => acc + (loc.affected_people || 0), 0);
         document.getElementById('adminTotalAffected').textContent = totalPeople.toLocaleString();
         document.getElementById('adminActiveReports').textContent = this.state.locations.length;
@@ -271,7 +416,7 @@ const App = {
             startVehicleMovementSimulation(primeRoute.path, "AMB-01 (Ambulance)", "#059669");
         }
 
-        // Pending Emergencies Table
+        // Emergencies table
         const tableBody = document.getElementById('adminEmergenciesTableBody');
         if (tableBody) {
             tableBody.innerHTML = this.state.locations.map(loc => {
@@ -302,7 +447,7 @@ const App = {
             }).join('');
         }
 
-        // Logs
+        // Logs feed
         const logsContainer = document.getElementById('adminLogsFeed');
         if (logsContainer) {
             logsContainer.innerHTML = this.state.driver_logs.map(log => `
@@ -381,10 +526,9 @@ const App = {
             </div>
         `).join('');
 
-        // Populate update form inputs
+        // Populate update form inputs with current values
         const form = document.getElementById('inventoryUpdateForm');
-        if (form && !form.dataset.initialized) {
-            form.dataset.initialized = "true";
+        if (form) {
             form.innerHTML = `
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                     <div>
@@ -442,7 +586,6 @@ const App = {
     renderAllocationView() {
         if (!this.state.locations || this.state.locations.length === 0) return;
 
-        // Take primary location for AI breakdown
         const locA = this.state.locations[0];
         const aiA = AIEngine.calculateSeverity(locA);
 
@@ -465,79 +608,133 @@ const App = {
         document.getElementById('barIsolation').style.width = `${aiA.features.isolation_penalty}%`;
         document.getElementById('valIsolation').textContent = `${aiA.features.isolation_penalty}%`;
 
-        // Solve and render OR-Tools allocation cards
+        // Constraint solver
         const optResults = Optimizer.solve(this.state.locations, this.state.inventory);
         Optimizer.renderAllocationCards('optimizerCardsContainer', optResults);
     },
 
     setupForms() {
-        // Field Officer report form
+        // Field Officer report form submission (100% interactive)
         const officerForm = document.getElementById('fieldReportForm');
         if (officerForm) {
             officerForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 AudioController.playLoRaChirp();
 
-                const payload = {
-                    name: document.getElementById('inputLocName').value,
-                    lat: parseFloat(document.getElementById('inputLat').value),
-                    lon: parseFloat(document.getElementById('inputLon').value),
-                    condition: document.getElementById('inputCondition').value,
-                    affected_people: parseInt(document.getElementById('inputPeople').value),
-                    medical_urgency: parseInt(document.getElementById('inputUrgency').value),
-                    road_condition: document.getElementById('inputRoad').value,
-                    communication_mode: document.getElementById('inputComm').value,
-                    req_ambulances: parseInt(document.getElementById('inputReqAmb').value),
-                    req_food: parseInt(document.getElementById('inputReqFood').value)
+                const name = document.getElementById('inputLocName').value.trim();
+                const lat = parseFloat(document.getElementById('inputLat').value);
+                const lon = parseFloat(document.getElementById('inputLon').value);
+                const condition = document.getElementById('inputCondition').value;
+                const people = parseInt(document.getElementById('inputPeople').value) || 100;
+                const urgency = parseInt(document.getElementById('inputUrgency').value) || 5;
+                const road = document.getElementById('inputRoad').value;
+                const comm = document.getElementById('inputComm').value;
+                const reqAmb = parseInt(document.getElementById('inputReqAmb').value) || 1;
+                const reqFood = parseInt(document.getElementById('inputReqFood').value) || 100;
+
+                const newId = `LOC-${String.fromCharCode(65 + this.state.locations.length)}`;
+                const newLocation = {
+                    id: newId,
+                    name: `${newId} (${name})`,
+                    lat: lat,
+                    lon: lon,
+                    condition: condition,
+                    affected_people: people,
+                    medical_urgency: urgency,
+                    road_condition: road,
+                    communication_mode: comm,
+                    demand: {
+                        ambulances: reqAmb,
+                        food_packs: reqFood,
+                        medicines: Math.round(people * 0.4),
+                        water_liters: Math.round(people * 3),
+                        boats: condition.toLowerCase().includes('flood') ? 1 : 0,
+                        tents: Math.round(people * 0.1)
+                    },
+                    reported_at: "Just now"
                 };
 
+                if (comm.toLowerCase().includes('lora')) {
+                    newLocation.lora_metadata = {
+                        freq_mhz: 868.3,
+                        rssi_dbm: -112,
+                        snr_db: 5.4,
+                        raw_hex: "4C4F52415F474154455741595F5458"
+                    };
+                }
+
+                // Try server API, else update local state directly
                 try {
-                    const res = await fetch('/api/report', {
+                    await fetch('/api/report', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify(newLocation)
                     });
-                    const result = await res.json();
-                    
-                    DriverSim.showToast(`Report from ${payload.name} ingested to Hub! AI Severity scored at ${result.ai_score.severity_score}/100.`, 'success');
-                    officerForm.reset();
-                    await this.fetchStatus();
-                } catch (err) {
-                    console.error("Submission failed", err);
-                }
+                } catch (netErr) {}
+
+                // Update in-memory state & storage
+                this.state.locations.unshift(newLocation);
+                this.addLog(`New Field Report received from ${name} (${people} affected, Urgency ${urgency}/10) via ${comm}`);
+                this.saveState();
+                this.renderAll();
+
+                const ai = AIEngine.calculateSeverity(newLocation);
+                DriverSim.showToast(`✅ Report Received! AI evaluated ${newLocation.name} with Severity Score ${ai.score}/100.`, 'success');
+                officerForm.reset();
             });
         }
 
-        // Inventory update form
+        // Inventory update form submission (100% interactive)
         const invForm = document.getElementById('inventoryUpdateForm');
         if (invForm) {
             invForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 AudioController.playSuccessChime();
 
-                const payload = {
-                    ambulances: document.getElementById('inputInvAmbulances').value,
-                    trucks: document.getElementById('inputInvTrucks').value,
-                    boats: document.getElementById('inputInvBoats').value,
-                    jcbs: document.getElementById('inputInvJcbs').value,
-                    food_packs: document.getElementById('inputInvFood').value,
-                    medicines: document.getElementById('inputInvMeds').value,
-                    water_liters: document.getElementById('inputInvWater').value,
-                    tents: document.getElementById('inputInvTents').value
+                const amb = parseInt(document.getElementById('inputInvAmbulances').value) || 0;
+                const trucks = parseInt(document.getElementById('inputInvTrucks').value) || 0;
+                const boats = parseInt(document.getElementById('inputInvBoats').value) || 0;
+                const jcbs = parseInt(document.getElementById('inputInvJcbs').value) || 0;
+                const food = parseInt(document.getElementById('inputInvFood').value) || 0;
+                const meds = parseInt(document.getElementById('inputInvMeds').value) || 0;
+                const water = parseInt(document.getElementById('inputInvWater').value) || 0;
+                const tents = parseInt(document.getElementById('inputInvTents').value) || 0;
+
+                const newInventory = {
+                    ambulances: { total: amb, allocated: 0, available: amb },
+                    trucks: { total: trucks, allocated: 0, available: trucks },
+                    boats: { total: boats, allocated: 0, available: boats },
+                    jcbs: { total: jcbs, allocated: 0, available: jcbs },
+                    small_vehicles: this.state.inventory.small_vehicles,
+                    food_packs: { total: food, allocated: 0, available: food },
+                    medicines: { total: meds, allocated: 0, available: meds },
+                    water_liters: { total: water, allocated: 0, available: water },
+                    tents: { total: tents, allocated: 0, available: tents }
                 };
 
                 try {
-                    const res = await fetch('/api/inventory', {
+                    await fetch('/api/inventory', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify({
+                            ambulances: amb,
+                            trucks: trucks,
+                            boats: boats,
+                            jcbs: jcbs,
+                            food_packs: food,
+                            medicines: meds,
+                            water_liters: water,
+                            tents: tents
+                        })
                     });
-                    const data = await res.json();
-                    DriverSim.showToast('Central Hub inventory stocks updated successfully!', 'success');
-                    await this.fetchStatus();
-                } catch (err) {
-                    console.error("Inventory update failed", err);
-                }
+                } catch (netErr) {}
+
+                this.state.inventory = newInventory;
+                this.addLog(`Warehouse stocks updated. Ambulances: ${amb}, Trucks: ${trucks}, Food Packs: ${food}`);
+                this.saveState();
+                this.renderAll();
+
+                DriverSim.showToast('✅ Hub Inventory updated! AI Allocation solver recalculated quotas.', 'success');
             });
         }
     },
@@ -556,17 +753,22 @@ const App = {
 
     async resetSimulation() {
         AudioController.playBeep(440, 'sine', 0.2);
-        await fetch('/api/reset', { method: 'POST' });
-        await this.fetchStatus();
+        try {
+            await fetch('/api/reset', { method: 'POST' });
+        } catch (e) {}
+
+        localStorage.removeItem('disaster_hub_state');
+        this.state = JSON.parse(JSON.stringify(DEFAULT_CLIENT_STATE));
+        this.renderAll();
         DriverSim.init();
-        DriverSim.showToast('Disaster simulation scenario reset to initial state.', 'info');
+        DriverSim.showToast('Disaster simulation scenario reset to default state.', 'info');
     },
 
     addLog(msg) {
         const now = new Date();
         const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
         this.state.driver_logs.unshift({ time: timeStr, event: msg });
-        this.renderAdminView();
+        this.saveState();
     },
 
     startClock() {
@@ -580,6 +782,7 @@ const App = {
     }
 };
 
+window.Auth = Auth;
 window.App = App;
 window.addEventListener('DOMContentLoaded', () => {
     App.init();
