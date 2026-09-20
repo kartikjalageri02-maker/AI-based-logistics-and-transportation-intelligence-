@@ -1,8 +1,9 @@
 /**
- * Main Disaster Logistics Controller & Audio Synthesizer
+ * AI Disaster Logistics Controller - Multi-Dashboard Router Edition
+ * Minimalist White Architecture
  */
 
-// Web Audio API Synthesizer for tactical sounds
+// Tactical Web Audio API Synthesizer
 const AudioController = {
     ctx: null,
     init() {
@@ -27,8 +28,8 @@ const AudioController = {
         } catch (e) {}
     },
     playHazardAlert() {
-        this.playBeep(900, 'sawtooth', 0.2);
-        setTimeout(() => this.playBeep(650, 'sawtooth', 0.3), 180);
+        this.playBeep(880, 'triangle', 0.2);
+        setTimeout(() => this.playBeep(587.33, 'triangle', 0.25), 180);
     },
     playSuccessChime() {
         this.playBeep(523.25, 'sine', 0.12);
@@ -36,20 +37,72 @@ const AudioController = {
         setTimeout(() => this.playBeep(783.99, 'sine', 0.25), 240);
     },
     playLoRaChirp() {
-        this.playBeep(1200, 'square', 0.08);
-        setTimeout(() => this.playBeep(1800, 'square', 0.08), 90);
+        this.playBeep(1200, 'sine', 0.08);
+        setTimeout(() => this.playBeep(1600, 'sine', 0.08), 80);
     }
 };
 
 const App = {
     state: null,
-    activeTab: 'mapView',
+    currentDashboard: 'admin',
 
     async init() {
+        this.setupRouter();
         await this.fetchStatus();
         DriverSim.init();
-        this.setupEventListeners();
-        this.startTelemetryTicker();
+        this.setupForms();
+        this.startClock();
+    },
+
+    setupRouter() {
+        // Handle hash navigation
+        const handleHash = () => {
+            const hash = window.location.hash.replace('#', '');
+            if (['admin', 'officer', 'inventory', 'allocation', 'driver'].includes(hash)) {
+                this.switchDashboard(hash, false);
+            } else {
+                this.switchDashboard('admin', false);
+            }
+        };
+
+        window.addEventListener('hashchange', handleHash);
+        handleHash();
+    },
+
+    switchDashboard(name, updateHash = true) {
+        this.currentDashboard = name;
+        if (updateHash) {
+            window.location.hash = name;
+        }
+
+        // Update nav button states
+        document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+            if (btn.dataset.tab === name) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // Hide all dashboard views
+        document.querySelectorAll('.dashboard-view').forEach(view => {
+            view.classList.add('hidden');
+        });
+
+        // Show active dashboard view
+        const targetView = document.getElementById(`view-${name}`);
+        if (targetView) {
+            targetView.classList.remove('hidden');
+        }
+
+        // Leaflet map refresh when returning to map-containing views
+        if (name === 'admin') {
+            setTimeout(() => {
+                if (disasterMap) {
+                    disasterMap.invalidateSize();
+                }
+            }, 100);
+        }
     },
 
     async fetchStatus() {
@@ -66,61 +119,223 @@ const App = {
     renderAll() {
         if (!this.state) return;
 
-        // 1. Render Map & Routes
-        initDisasterMap(this.state.hub, this.state.locations, this.state.routes, this.state.hazards);
-        
-        // Start animated vehicle along primary route
-        const primeRoute = this.state.routes.find(r => r.id === "ROUTE-1");
-        if (primeRoute && !primeRoute.is_blocked) {
-            startVehicleMovementSimulation(primeRoute.path, "AMB-01 (Ambulance)", "#10b981");
-        }
+        // 1. Render Admin Dashboard
+        this.renderAdminView();
 
-        // 2. Render KPI Stats
-        this.renderKPIs();
+        // 2. Render Officer View
+        this.renderOfficerView();
 
-        // 3. Render AI Severity Engine
-        this.renderAISection();
+        // 3. Render Inventory View
+        this.renderInventoryView();
 
-        // 4. Render Optimization
-        this.runOptimization();
+        // 4. Render Allocation View
+        this.renderAllocationView();
 
-        // 5. Render Locations List
-        this.renderLocationsList();
-
-        // 6. Render LoRa Terminal
-        this.renderLoRaTerminal();
-
-        // 7. Render Logs
-        this.renderActivityLogs();
+        // 5. Render Driver View
+        DriverSim.renderDriverTerminal();
     },
 
-    renderKPIs() {
+    renderAdminView() {
+        // KPIs
         const totalPeople = this.state.locations.reduce((acc, loc) => acc + (loc.affected_people || 0), 0);
-        document.getElementById('statTotalAffected').textContent = totalPeople.toLocaleString();
-        document.getElementById('statActiveReports').textContent = this.state.locations.length;
+        document.getElementById('adminTotalAffected').textContent = totalPeople.toLocaleString();
+        document.getElementById('adminActiveReports').textContent = this.state.locations.length;
         
         const openRoutes = this.state.routes.filter(r => !r.is_blocked && r.status !== "BLOCKED").length;
-        document.getElementById('statSafeRoutes').textContent = `${openRoutes} / ${this.state.routes.length}`;
+        document.getElementById('adminSafeRoutes').textContent = `${openRoutes} / ${this.state.routes.length}`;
 
         const amb = this.state.inventory.ambulances;
-        document.getElementById('statAmbulances').textContent = `${amb.available} / ${amb.total}`;
+        document.getElementById('adminAmbulances').textContent = `${amb.available} / ${amb.total}`;
+
+        // Map
+        initDisasterMap(this.state.hub, this.state.locations, this.state.routes, this.state.hazards);
+        const primeRoute = this.state.routes.find(r => r.id === "ROUTE-1");
+        if (primeRoute && !primeRoute.is_blocked) {
+            startVehicleMovementSimulation(primeRoute.path, "AMB-01 (Ambulance)", "#059669");
+        }
+
+        // Pending Emergencies Table
+        const tableBody = document.getElementById('adminEmergenciesTableBody');
+        if (tableBody) {
+            tableBody.innerHTML = this.state.locations.map(loc => {
+                const ai = AIEngine.calculateSeverity(loc);
+                const isLoRa = loc.communication_mode?.toLowerCase().includes("lora");
+
+                return `
+                    <tr class="hover:bg-slate-50 transition border-b border-slate-100 text-xs">
+                        <td class="py-3 px-4 font-semibold text-slate-900">${loc.name}</td>
+                        <td class="py-3 px-4">
+                            <span class="px-2 py-0.5 rounded-full font-semibold font-mono text-[11px] ${ai.tierClass}">
+                                ${ai.score}/100 • ${ai.tier.split(' ')[0]}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 text-slate-600">${loc.condition}</td>
+                        <td class="py-3 px-4 font-mono font-medium text-slate-800">${loc.affected_people} civilians</td>
+                        <td class="py-3 px-4 text-slate-600">
+                            ${isLoRa ? '<span class="text-cyan-700 font-mono"><i class="fas fa-tower-broadcast mr-1"></i> LoRa 868MHz</span>' : '<span class="text-emerald-700"><i class="fas fa-signal mr-1"></i> 4G Cell</span>'}
+                        </td>
+                        <td class="py-3 px-4 text-right">
+                            <button onclick="App.switchDashboard('allocation')" 
+                                class="px-2.5 py-1 rounded bg-blue-50 text-blue-700 hover:bg-blue-100 font-semibold text-[11px] transition">
+                                View Allocation <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Logs
+        const logsContainer = document.getElementById('adminLogsFeed');
+        if (logsContainer) {
+            logsContainer.innerHTML = this.state.driver_logs.map(log => `
+                <div class="py-1.5 border-b border-slate-100 flex items-start space-x-2 text-xs">
+                    <span class="text-slate-400 font-mono text-[11px] shrink-0">[${log.time}]</span>
+                    <span class="text-slate-700">${log.event}</span>
+                </div>
+            `).join('');
+        }
     },
 
-    renderAISection() {
+    renderOfficerView() {
+        const historyContainer = document.getElementById('officerReportsHistory');
+        if (!historyContainer) return;
+
+        historyContainer.innerHTML = this.state.locations.map(loc => {
+            const ai = AIEngine.calculateSeverity(loc);
+            const isLoRa = loc.communication_mode?.toLowerCase().includes("lora");
+
+            return `
+                <div class="white-card p-4 space-y-2">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+                        <h4 class="font-bold text-sm text-slate-900">${loc.name}</h4>
+                        <span class="text-xs px-2 py-0.5 rounded-full font-semibold font-mono ${ai.tierClass}">${ai.score}/100</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                        <div><strong>Situation:</strong> ${loc.condition}</div>
+                        <div><strong>Road Access:</strong> ${loc.road_condition}</div>
+                        <div><strong>Civilians:</strong> ${loc.affected_people}</div>
+                        <div><strong>Urgency:</strong> ${loc.medical_urgency}/10</div>
+                    </div>
+                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                        <span class="text-slate-500 font-mono">
+                            ${isLoRa ? '<i class="fas fa-tower-broadcast text-cyan-600 mr-1"></i> LoRa Gateway Ingest' : '<i class="fas fa-signal text-emerald-600 mr-1"></i> Cellular 4G'}
+                        </span>
+                        <span class="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded">Hub Ingested</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    renderInventoryView() {
+        const inv = this.state.inventory;
+        const container = document.getElementById('inventoryCardsContainer');
+        if (!container) return;
+
+        const items = [
+            { key: "ambulances", label: "Emergency Ambulances", val: inv.ambulances, icon: "fa-truck-medical", color: "text-red-600", unit: "vehicles" },
+            { key: "trucks", label: "Heavy Supply Trucks", val: inv.trucks, icon: "fa-truck-moving", color: "text-amber-600", unit: "vehicles" },
+            { key: "boats", label: "Rescue Boats", val: inv.boats, icon: "fa-ship", color: "text-cyan-600", unit: "crafts" },
+            { key: "jcbs", label: "JCBs / Excavators", val: inv.jcbs, icon: "fa-trowel-bricks", color: "text-yellow-600", unit: "heavy units" },
+            { key: "small_vehicles", label: "4x4 Recon Vehicles", val: inv.small_vehicles, icon: "fa-car-side", color: "text-emerald-600", unit: "vehicles" },
+            { key: "food_packs", label: "Food & Ration Packs", val: inv.food_packs, icon: "fa-box-tissue", color: "text-orange-600", unit: "packs" },
+            { key: "medicines", label: "Trauma Medicine Kits", val: inv.medicines, icon: "fa-pills", color: "text-purple-600", unit: "kits" },
+            { key: "water_liters", label: "Potable Clean Water", val: inv.water_liters, icon: "fa-faucet-drip", color: "text-blue-600", unit: "liters" },
+            { key: "tents", label: "Emergency Shelters / Tents", val: inv.tents, icon: "fa-campground", color: "text-teal-600", unit: "tents" }
+        ];
+
+        container.innerHTML = items.map(item => `
+            <div class="white-card p-4 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0">
+                        <i class="fas ${item.icon} ${item.color} text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">${item.label}</div>
+                        <div class="text-xl font-bold font-mono text-slate-900 mt-0.5">
+                            ${item.val.available} <span class="text-xs font-normal text-slate-400">/ ${item.val.total} ${item.unit}</span>
+                        </div>
+                    </div>
+                </div>
+                <span class="text-xs px-2 py-1 rounded bg-slate-100 text-slate-700 font-mono font-semibold">
+                    READY
+                </span>
+            </div>
+        `).join('');
+
+        // Populate update form inputs
+        const form = document.getElementById('inventoryUpdateForm');
+        if (form && !form.dataset.initialized) {
+            form.dataset.initialized = "true";
+            form.innerHTML = `
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Ambulances</label>
+                        <input type="number" id="inputInvAmbulances" value="${inv.ambulances.total}" min="0" 
+                            class="w-full bg-white border border-slate-200 rounded-lg p-2 font-mono text-slate-900 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Supply Trucks</label>
+                        <input type="number" id="inputInvTrucks" value="${inv.trucks.total}" min="0" 
+                            class="w-full bg-white border border-slate-200 rounded-lg p-2 font-mono text-slate-900 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Rescue Boats</label>
+                        <input type="number" id="inputInvBoats" value="${inv.boats.total}" min="0" 
+                            class="w-full bg-white border border-slate-200 rounded-lg p-2 font-mono text-slate-900 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">JCBs / Excavators</label>
+                        <input type="number" id="inputInvJcbs" value="${inv.jcbs.total}" min="0" 
+                            class="w-full bg-white border border-slate-200 rounded-lg p-2 font-mono text-slate-900 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Food Packs</label>
+                        <input type="number" id="inputInvFood" value="${inv.food_packs.total}" min="0" step="50" 
+                            class="w-full bg-white border border-slate-200 rounded-lg p-2 font-mono text-slate-900 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Medical Kits</label>
+                        <input type="number" id="inputInvMeds" value="${inv.medicines.total}" min="0" step="25" 
+                            class="w-full bg-white border border-slate-200 rounded-lg p-2 font-mono text-slate-900 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Clean Water (L)</label>
+                        <input type="number" id="inputInvWater" value="${inv.water_liters.total}" min="0" step="200" 
+                            class="w-full bg-white border border-slate-200 rounded-lg p-2 font-mono text-slate-900 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block font-medium text-slate-700 mb-1">Shelter Tents</label>
+                        <input type="number" id="inputInvTents" value="${inv.tents.total}" min="0" step="10" 
+                            class="w-full bg-white border border-slate-200 rounded-lg p-2 font-mono text-slate-900 focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+                <div class="mt-4 flex justify-end">
+                    <button type="submit" 
+                        class="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition shadow-sm flex items-center space-x-2">
+                        <i class="fas fa-save"></i>
+                        <span>Update Hub Inventory</span>
+                    </button>
+                </div>
+            `;
+        }
+    },
+
+    renderAllocationView() {
         if (!this.state.locations || this.state.locations.length === 0) return;
 
-        // Take the highest severity location for gauge display
+        // Take primary location for AI breakdown
         const locA = this.state.locations[0];
         const aiA = AIEngine.calculateSeverity(locA);
-        
+
         AIEngine.renderGauge(aiA.score, 'mainAIGauge');
-        
+
         document.getElementById('aiLocationName').textContent = locA.name;
         document.getElementById('aiPriorityBadge').textContent = aiA.tier;
-        document.getElementById('aiPriorityBadge').className = `text-xs px-2 py-0.5 rounded font-mono ${aiA.tierClass}`;
+        document.getElementById('aiPriorityBadge').className = `text-xs px-2.5 py-0.5 rounded-full font-semibold font-mono ${aiA.tierClass}`;
         document.getElementById('aiExplanation').textContent = aiA.explanation;
 
-        // Breakdown bars
         document.getElementById('barUrgency').style.width = `${aiA.features.medical_urgency}%`;
         document.getElementById('valUrgency').textContent = `${aiA.features.medical_urgency}%`;
 
@@ -132,93 +347,17 @@ const App = {
 
         document.getElementById('barIsolation').style.width = `${aiA.features.isolation_penalty}%`;
         document.getElementById('valIsolation').textContent = `${aiA.features.isolation_penalty}%`;
-    },
 
-    runOptimization() {
+        // Solve and render OR-Tools allocation cards
         const optResults = Optimizer.solve(this.state.locations, this.state.inventory);
         Optimizer.renderAllocationCards('optimizerCardsContainer', optResults);
     },
 
-    renderLocationsList() {
-        const container = document.getElementById('fieldReportsContainer');
-        if (!container) return;
-
-        container.innerHTML = this.state.locations.map(loc => {
-            const isLoRa = loc.communication_mode?.toLowerCase().includes("lora");
-            const ai = AIEngine.calculateSeverity(loc);
-
-            return `
-                <div class="p-3 rounded-lg bg-slate-800/80 border border-slate-700/80 hover:border-blue-500/50 transition">
-                    <div class="flex items-center justify-between">
-                        <div class="font-bold text-sm text-white">${loc.name}</div>
-                        <span class="text-xs px-2 py-0.5 rounded font-mono ${ai.tierClass}">${ai.score}/100</span>
-                    </div>
-                    <div class="text-xs text-slate-300 mt-1 flex items-center space-x-3">
-                        <span><i class="fas fa-users text-blue-400 mr-1"></i> ${loc.affected_people} Affected</span>
-                        <span><i class="fas fa-heart-pulse text-red-400 mr-1"></i> Urgency: ${loc.medical_urgency}/10</span>
-                    </div>
-                    <div class="text-xs text-slate-400 mt-1">
-                        <i class="fas fa-road text-amber-400 mr-1"></i> ${loc.road_condition}
-                    </div>
-                    <div class="mt-2 flex items-center justify-between text-[11px] pt-1.5 border-t border-slate-700/50">
-                        <span class="font-mono text-slate-400">
-                            ${isLoRa ? '<i class="fas fa-tower-broadcast text-cyan-400 mr-1"></i> LoRa Gateway (868MHz)' : '<i class="fas fa-signal text-emerald-400 mr-1"></i> Cellular 4G/5G'}
-                        </span>
-                        <span class="text-slate-500">${loc.reported_at || 'Live'}</span>
-                    </div>
-                </div>
-            `;
-        }).join('');
-    },
-
-    renderLoRaTerminal() {
-        const container = document.getElementById('loraTerminalContent');
-        if (!container) return;
-
-        const loraLoc = this.state.locations.find(l => l.communication_mode?.toLowerCase().includes("lora"));
-        if (loraLoc && loraLoc.lora_metadata) {
-            const meta = loraLoc.lora_metadata;
-            container.innerHTML = `
-                <div class="space-y-1.5 font-mono text-[11px]">
-                    <div class="text-cyan-400"><i class="fas fa-satellite-dish mr-1"></i> [LoRaWAN GW-EAST-CHAMOLI] RX PACKET OK</div>
-                    <div class="text-slate-400">FREQ: <span class="text-white">${meta.freq_mhz} MHz</span> | RSSI: <span class="text-emerald-400">${meta.rssi_dbm} dBm</span> | SNR: <span class="text-emerald-400">${meta.snr_db} dB</span></div>
-                    <div class="p-2 rounded bg-slate-950 text-emerald-400 break-all border border-slate-800">
-                        RAW_HEX: ${meta.raw_hex}
-                    </div>
-                    <div class="text-slate-300">
-                        DECODED: <span class="text-blue-300">Payload valid from ${loraLoc.name}. Medical urgency index 6, 320 civilians isolated, zero cellular tower coverage.</span>
-                    </div>
-                </div>
-            `;
-        } else {
-            container.innerHTML = `<div class="text-xs text-slate-500 font-mono">Listening on 868.1 MHz ISM band...</div>`;
-        }
-    },
-
-    renderActivityLogs() {
-        const container = document.getElementById('logsContainer');
-        if (!container) return;
-
-        container.innerHTML = this.state.driver_logs.map(log => `
-            <div class="text-xs font-mono py-1.5 border-b border-slate-800 flex items-start space-x-2">
-                <span class="text-slate-500 shrink-0">[${log.time}]</span>
-                <span class="text-slate-300">${log.event}</span>
-            </div>
-        `).join('');
-    },
-
-    addLog(msg) {
-        const now = new Date();
-        const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-        this.state.driver_logs.unshift({ time: timeStr, event: msg });
-        this.renderActivityLogs();
-    },
-
-    setupEventListeners() {
-        // Field Assessment Form submit
-        const form = document.getElementById('fieldReportForm');
-        if (form) {
-            form.addEventListener('submit', async (e) => {
+    setupForms() {
+        // Field Officer report form
+        const officerForm = document.getElementById('fieldReportForm');
+        if (officerForm) {
+            officerForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 AudioController.playLoRaChirp();
 
@@ -243,27 +382,79 @@ const App = {
                     });
                     const result = await res.json();
                     
-                    DriverSim.showToast(`Report Received from ${payload.name}! Central Hub AI re-evaluating priority ranking.`, 'info');
-                    form.reset();
+                    DriverSim.showToast(`Report from ${payload.name} ingested to Hub! AI Severity scored at ${result.ai_score.severity_score}/100.`, 'success');
+                    officerForm.reset();
                     await this.fetchStatus();
                 } catch (err) {
                     console.error("Submission failed", err);
                 }
             });
         }
+
+        // Inventory update form
+        const invForm = document.getElementById('inventoryUpdateForm');
+        if (invForm) {
+            invForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                AudioController.playSuccessChime();
+
+                const payload = {
+                    ambulances: document.getElementById('inputInvAmbulances').value,
+                    trucks: document.getElementById('inputInvTrucks').value,
+                    boats: document.getElementById('inputInvBoats').value,
+                    jcbs: document.getElementById('inputInvJcbs').value,
+                    food_packs: document.getElementById('inputInvFood').value,
+                    medicines: document.getElementById('inputInvMeds').value,
+                    water_liters: document.getElementById('inputInvWater').value,
+                    tents: document.getElementById('inputInvTents').value
+                };
+
+                try {
+                    const res = await fetch('/api/inventory', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+                    DriverSim.showToast('Central Hub inventory stocks updated successfully!', 'success');
+                    await this.fetchStatus();
+                } catch (err) {
+                    console.error("Inventory update failed", err);
+                }
+            });
+        }
+    },
+
+    useCurrentLocation() {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                document.getElementById('inputLat').value = pos.coords.latitude.toFixed(4);
+                document.getElementById('inputLon').value = pos.coords.longitude.toFixed(4);
+                DriverSim.showToast(`GPS Position acquired: ${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`, 'info');
+            }, () => {
+                DriverSim.showToast(`Using default mountain disaster coordinates.`, 'info');
+            });
+        }
     },
 
     async resetSimulation() {
-        AudioController.playBeep(400, 'sine', 0.2);
+        AudioController.playBeep(440, 'sine', 0.2);
         await fetch('/api/reset', { method: 'POST' });
         await this.fetchStatus();
         DriverSim.init();
-        DriverSim.showToast('Disaster simulation scenario reset to default state.', 'info');
+        DriverSim.showToast('Disaster simulation scenario reset to initial state.', 'info');
     },
 
-    startTelemetryTicker() {
+    addLog(msg) {
+        const now = new Date();
+        const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        this.state.driver_logs.unshift({ time: timeStr, event: msg });
+        this.renderAdminView();
+    },
+
+    startClock() {
         setInterval(() => {
-            const timeEl = document.getElementById('utcClock');
+            const timeEl = document.getElementById('navClock');
             if (timeEl) {
                 const d = new Date();
                 timeEl.textContent = d.toLocaleTimeString() + " (IST)";

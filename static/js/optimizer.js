@@ -133,70 +133,70 @@ const Optimizer = {
 
         results.allocations.forEach(item => {
             const isTop = item.rank === 1;
-            const badgeColor = isTop ? 'bg-red-500/20 text-red-400 border-red-500/40' : 'bg-blue-500/20 text-blue-400 border-blue-500/40';
+            const badgeColor = isTop ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200';
             
             html += `
-                <div class="hud-border rounded-xl p-4 flex flex-col justify-between">
+                <div class="white-card p-5 flex flex-col justify-between">
                     <div>
-                        <div class="flex items-center justify-between pb-3 border-b border-slate-700">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                             <div>
-                                <span class="text-xs px-2 py-0.5 rounded border font-mono ${badgeColor}">
+                                <span class="text-xs px-2.5 py-0.5 rounded-full border font-semibold ${badgeColor}">
                                     ${item.priorityLabel}
                                 </span>
-                                <h4 class="text-base font-bold text-white mt-1">${item.location.name}</h4>
+                                <h4 class="text-base font-bold text-slate-900 mt-1.5">${item.location.name}</h4>
                             </div>
                             <div class="text-right">
-                                <div class="text-xs text-slate-400">Severity Index</div>
-                                <div class="text-lg font-mono font-bold ${isTop ? 'text-red-400' : 'text-amber-400'}">
+                                <div class="text-xs text-slate-500">AI Severity</div>
+                                <div class="text-lg font-mono font-bold ${isTop ? 'text-red-600' : 'text-amber-600'}">
                                     ${item.ai.score}/100
                                 </div>
                             </div>
                         </div>
 
                         <!-- Resource Allocations -->
-                        <div class="mt-3">
-                            <div class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                                <i class="fas fa-boxes-stacked mr-1 text-blue-400"></i> Allocated Resources
+                        <div class="mt-4">
+                            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5">
+                                <i class="fas fa-boxes-stacked mr-1 text-blue-600"></i> Allocated Relief Quotas
                             </div>
                             <div class="grid grid-cols-2 gap-2 text-xs">
-                                <div class="bg-slate-800/80 p-2 rounded flex items-center justify-between">
-                                    <span class="text-slate-400"><i class="fas fa-truck-medical text-red-400 mr-1"></i> Ambulances:</span>
-                                    <span class="font-mono font-bold text-white">${item.allocated.ambulances} units</span>
+                                <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex items-center justify-between">
+                                    <span class="text-slate-600"><i class="fas fa-truck-medical text-red-500 mr-1.5"></i> Ambulances:</span>
+                                    <span class="font-mono font-bold text-slate-900">${item.allocated.ambulances} units</span>
                                 </div>
-                                <div class="bg-slate-800/80 p-2 rounded flex items-center justify-between">
-                                    <span class="text-slate-400"><i class="fas fa-box-tissue text-amber-400 mr-1"></i> Food Packs:</span>
-                                    <span class="font-mono font-bold text-white">${item.allocated.food_packs} pk</span>
+                                <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex items-center justify-between">
+                                    <span class="text-slate-600"><i class="fas fa-box-tissue text-amber-500 mr-1.5"></i> Food Packs:</span>
+                                    <span class="font-mono font-bold text-slate-900">${item.allocated.food_packs} pk</span>
                                 </div>
-                                <div class="bg-slate-800/80 p-2 rounded flex items-center justify-between">
-                                    <span class="text-slate-400"><i class="fas fa-pills text-purple-400 mr-1"></i> Medicines:</span>
-                                    <span class="font-mono font-bold text-white">${item.allocated.medicines} kits</span>
+                                <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex items-center justify-between">
+                                    <span class="text-slate-600"><i class="fas fa-pills text-purple-500 mr-1.5"></i> Medicines:</span>
+                                    <span class="font-mono font-bold text-slate-900">${item.allocated.medicines} kits</span>
                                 </div>
-                                <div class="bg-slate-800/80 p-2 rounded flex items-center justify-between">
-                                    <span class="text-slate-400"><i class="fas fa-faucet-drip text-cyan-400 mr-1"></i> Clean Water:</span>
-                                    <span class="font-mono font-bold text-white">${item.allocated.water_liters} L</span>
+                                <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex items-center justify-between">
+                                    <span class="text-slate-600"><i class="fas fa-faucet-drip text-cyan-600 mr-1.5"></i> Water:</span>
+                                    <span class="font-mono font-bold text-slate-900">${item.allocated.water_liters} L</span>
                                 </div>
                             </div>
                             ${item.allocated.boats > 0 ? `
-                                <div class="mt-2 bg-slate-800/80 p-2 rounded flex items-center justify-between text-xs">
-                                    <span class="text-slate-400"><i class="fas fa-ship text-cyan-400 mr-1"></i> Rescue Boats:</span>
-                                    <span class="font-mono font-bold text-white">${item.allocated.boats} units</span>
+                                <div class="mt-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex items-center justify-between text-xs">
+                                    <span class="text-slate-600"><i class="fas fa-ship text-cyan-600 mr-1.5"></i> Rescue Boats:</span>
+                                    <span class="font-mono font-bold text-slate-900">${item.allocated.boats} units</span>
                                 </div>
                             ` : ''}
                         </div>
 
                         <!-- Specialized Vehicles Assigned -->
-                        <div class="mt-3">
-                            <div class="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                                <i class="fas fa-truck-ramp-box mr-1 text-emerald-400"></i> Assigned Vehicles & Equipment
+                        <div class="mt-4">
+                            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5">
+                                <i class="fas fa-truck-ramp-box mr-1 text-emerald-600"></i> Assigned Vehicles & Heavy Equipment
                             </div>
-                            <div class="space-y-1.5">
+                            <div class="space-y-2">
                                 ${item.vehicles.map(v => `
-                                    <div class="bg-slate-800/50 border border-slate-700/60 p-1.5 rounded flex items-center justify-between text-xs">
-                                        <div class="flex items-center space-x-2">
-                                            <i class="fas ${v.icon} ${v.color}"></i>
-                                            <span class="font-medium text-slate-200">${v.type} (${v.count})</span>
+                                    <div class="bg-white border border-slate-200 p-2 rounded-lg flex items-center justify-between text-xs shadow-2xs">
+                                        <div class="flex items-center space-x-2.5">
+                                            <i class="fas ${v.icon} ${v.color.replace('text-red-400', 'text-red-600').replace('text-amber-400', 'text-amber-600').replace('text-cyan-400', 'text-cyan-600').replace('text-emerald-400', 'text-emerald-600')}"></i>
+                                            <span class="font-semibold text-slate-800">${v.type} (${v.count})</span>
                                         </div>
-                                        <span class="text-[10px] text-slate-400">${v.purpose}</span>
+                                        <span class="text-[11px] text-slate-500">${v.purpose}</span>
                                     </div>
                                 `).join('')}
                             </div>
@@ -204,11 +204,11 @@ const Optimizer = {
 
                         <!-- Alternative Plan if Constrained -->
                         ${item.alternativePlan ? `
-                            <div class="mt-3 p-2.5 rounded bg-amber-500/10 border border-amber-500/30 text-xs">
-                                <div class="text-amber-400 font-semibold flex items-center">
-                                    <i class="fas fa-shuffle mr-1.5"></i> Alternative Support Plan
+                            <div class="mt-4 p-3 rounded-lg bg-amber-50/80 border border-amber-200 text-xs">
+                                <div class="text-amber-900 font-semibold flex items-center">
+                                    <i class="fas fa-shuffle mr-1.5 text-amber-600"></i> Automated Alternative Support Plan
                                 </div>
-                                <p class="text-slate-300 mt-1 text-[11px] leading-relaxed">${item.alternativePlan}</p>
+                                <p class="text-amber-800 mt-1 text-[11px] leading-relaxed">${item.alternativePlan}</p>
                             </div>
                         ` : ''}
                     </div>

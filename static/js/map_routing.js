@@ -1,10 +1,8 @@
 /**
- * Map & Disaster-Aware Routing Engine
- * Implements Module 6 & 7:
- * - Leaflet OpenStreetMap interactive integration
+ * Map & Disaster-Aware Routing Engine (Minimalist Light Theme)
+ * - OpenStreetMap & CartoDB Positron Light Tiles
  * - Route 1 (Safe / Primary) vs Route 2 (Alternative) vs Route 3 (Blocked Landslide)
- * - Hazard alerts & dynamic re-routing
- * - Animated vehicle dispatch along polylines
+ * - Animated rescue vehicle simulation
  */
 
 let disasterMap = null;
@@ -14,8 +12,12 @@ let activeVehicleMarkers = [];
 let vehicleAnimationTimers = [];
 
 function initDisasterMap(hub, locations, routes, hazards) {
+    const mapElement = document.getElementById('map');
+    if (!mapElement) return;
+
     if (disasterMap) {
         disasterMap.remove();
+        disasterMap = null;
     }
 
     const defaultCenter = [hub.lat || 30.22, hub.lon || 78.88];
@@ -25,9 +27,9 @@ function initDisasterMap(hub, locations, routes, hazards) {
         zoomControl: true
     });
 
-    // Dark-mode cartographic tiles (CartoDB DarkMatter) with OSM fallback
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    // Clean Light CartoDB Positron Basemap with OSM attribution
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd',
         maxZoom: 19
     }).addTo(disasterMap);
@@ -36,6 +38,8 @@ function initDisasterMap(hub, locations, routes, hazards) {
 }
 
 function renderMapEntities(hub, locations, routes, hazards) {
+    if (!disasterMap) return;
+
     // Clear previous layers
     routeLayers.forEach(layer => disasterMap.removeLayer(layer));
     markerLayers.forEach(marker => disasterMap.removeLayer(marker));
@@ -46,17 +50,17 @@ function renderMapEntities(hub, locations, routes, hazards) {
     const hubIcon = L.divIcon({
         className: 'custom-hub-icon',
         html: `<div class="hub-marker-pin"><i class="fas fa-satellite-dish text-white text-xs"></i></div>`,
-        iconSize: [36, 36],
-        iconAnchor: [18, 36]
+        iconSize: [34, 34],
+        iconAnchor: [17, 34]
     });
 
     const hubMarker = L.marker([hub.lat, hub.lon], { icon: hubIcon })
         .addTo(disasterMap)
         .bindPopup(`
-            <div class="p-2 text-slate-900">
-                <div class="font-bold text-sm text-blue-700"><i class="fas fa-building mr-1"></i> ${hub.name}</div>
+            <div class="p-2 font-sans">
+                <div class="font-bold text-sm text-blue-600"><i class="fas fa-building mr-1"></i> ${hub.name}</div>
                 <div class="text-xs text-slate-600 mt-1">Status: <span class="text-emerald-600 font-semibold">${hub.status}</span></div>
-                <div class="text-xs text-slate-500">Coord: ${hub.lat.toFixed(4)}, ${hub.lon.toFixed(4)}</div>
+                <div class="text-xs text-slate-400 mt-0.5">Coordinates: ${hub.lat.toFixed(4)}, ${hub.lon.toFixed(4)}</div>
             </div>
         `);
     markerLayers.push(hubMarker);
@@ -64,13 +68,13 @@ function renderMapEntities(hub, locations, routes, hazards) {
     // 2. Render Disaster Locations (Location A, Location B, etc.)
     locations.forEach(loc => {
         const isCritical = (loc.ai_analysis?.severity_score || 70) >= 75;
-        const colorClass = isCritical ? 'bg-red-600 animate-pulse-red' : 'bg-amber-500';
+        const colorClass = isCritical ? 'bg-red-600 text-white animate-pulse-danger' : 'bg-amber-500 text-white';
         
         const locIcon = L.divIcon({
             className: 'custom-loc-icon',
             html: `
                 <div class="relative flex items-center justify-center">
-                    <div class="w-8 h-8 rounded-full ${colorClass} border-2 border-white flex items-center justify-center text-white text-xs font-bold shadow-lg">
+                    <div class="w-8 h-8 rounded-full ${colorClass} border-2 border-white shadow-md flex items-center justify-center text-xs font-bold font-mono">
                         ${loc.id.replace('LOC-', '')}
                     </div>
                 </div>
@@ -82,15 +86,15 @@ function renderMapEntities(hub, locations, routes, hazards) {
         const marker = L.marker([loc.lat, loc.lon], { icon: locIcon })
             .addTo(disasterMap)
             .bindPopup(`
-                <div class="p-2 text-slate-900 min-w-[200px]">
-                    <div class="font-bold text-sm text-red-700 flex items-center justify-between">
+                <div class="p-2 font-sans min-w-[210px]">
+                    <div class="font-bold text-sm text-slate-900 flex items-center justify-between pb-1 border-b border-slate-100">
                         <span>${loc.name}</span>
-                        <span class="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700 font-mono">${loc.ai_analysis?.severity_score || 80}/100</span>
+                        <span class="text-xs px-1.5 py-0.5 rounded bg-red-100 text-red-700 font-mono">${loc.ai_analysis?.severity_score || 80}/100</span>
                     </div>
                     <div class="text-xs text-slate-700 mt-1.5"><strong>Condition:</strong> ${loc.condition}</div>
-                    <div class="text-xs text-slate-700"><strong>Road:</strong> ${loc.road_condition}</div>
-                    <div class="text-xs text-slate-700"><strong>People Affected:</strong> ${loc.affected_people}</div>
-                    <div class="text-xs text-blue-700 mt-1 font-mono"><i class="fas fa-broadcast-tower mr-1"></i> ${loc.communication_mode}</div>
+                    <div class="text-xs text-slate-700"><strong>Road Access:</strong> ${loc.road_condition}</div>
+                    <div class="text-xs text-slate-700"><strong>Civilians:</strong> ${loc.affected_people} affected</div>
+                    <div class="text-xs text-blue-600 mt-1 font-mono"><i class="fas fa-tower-broadcast mr-1"></i> ${loc.communication_mode}</div>
                 </div>
             `);
         markerLayers.push(marker);
@@ -100,19 +104,19 @@ function renderMapEntities(hub, locations, routes, hazards) {
     hazards.forEach(h => {
         const hazardIcon = L.divIcon({
             className: 'custom-hazard-icon',
-            html: `<div class="hazard-marker-pin"><i class="fas fa-triangle-exclamation text-white text-sm"></i></div>`,
-            iconSize: [32, 32],
-            iconAnchor: [16, 16]
+            html: `<div class="hazard-marker-pin"><i class="fas fa-triangle-exclamation text-white text-xs"></i></div>`,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
         });
 
         const hMarker = L.marker([h.lat, h.lon], { icon: hazardIcon })
             .addTo(disasterMap)
             .bindPopup(`
-                <div class="p-2 text-slate-900">
+                <div class="p-2 font-sans">
                     <div class="font-bold text-sm text-red-600"><i class="fas fa-land-mine-on mr-1"></i> ${h.name}</div>
-                    <div class="text-xs text-slate-700 mt-1">Hazard Type: <span class="font-semibold text-red-700">${h.type}</span></div>
-                    <div class="text-xs text-slate-600">Affected Corridor: <strong>${h.affected_route}</strong></div>
-                    <div class="text-xs text-amber-700 mt-1 font-semibold">Equipment Required: ${h.clearing_equipment}</div>
+                    <div class="text-xs text-slate-700 mt-1">Hazard: <span class="font-semibold text-red-600">${h.type}</span></div>
+                    <div class="text-xs text-slate-600">Corridor: <strong>${h.affected_route}</strong></div>
+                    <div class="text-xs text-amber-600 mt-0.5 font-medium">Clearance Unit: ${h.clearing_equipment}</div>
                 </div>
             `);
         markerLayers.push(hMarker);
@@ -122,20 +126,20 @@ function renderMapEntities(hub, locations, routes, hazards) {
     routes.forEach(r => {
         const isBlocked = r.is_blocked || r.status === 'BLOCKED';
         const polylineOptions = {
-            color: r.color || (isBlocked ? '#ef4444' : '#10b981'),
+            color: isBlocked ? '#ef4444' : (r.color || '#059669'),
             weight: isBlocked ? 4 : 6,
-            opacity: isBlocked ? 0.6 : 0.9,
-            dashArray: isBlocked ? '8, 8' : null
+            opacity: isBlocked ? 0.7 : 0.85,
+            dashArray: isBlocked ? '6, 6' : null
         };
 
         const polyline = L.polyline(r.path, polylineOptions).addTo(disasterMap);
         
         polyline.bindPopup(`
-            <div class="p-2 text-slate-900">
-                <div class="font-bold text-sm" style="color: ${r.color || '#10b981'}">${r.name}</div>
+            <div class="p-2 font-sans">
+                <div class="font-bold text-sm" style="color: ${isBlocked ? '#ef4444' : '#059669'}">${r.name}</div>
                 <div class="text-xs text-slate-700 mt-1">Status: <strong>${r.status}</strong></div>
                 <div class="text-xs text-slate-600">${r.description}</div>
-                <div class="text-xs text-slate-500 mt-1">Length: ${r.distance_km} km | Risk Index: ${r.risk_score}/100</div>
+                <div class="text-xs text-slate-500 mt-1">Distance: ${r.distance_km} km | Risk Index: ${r.risk_score}/100</div>
             </div>
         `);
         routeLayers.push(polyline);
@@ -144,15 +148,16 @@ function renderMapEntities(hub, locations, routes, hazards) {
     // Fit map bounds
     if (routes.length > 0 && routes[0].path.length > 0) {
         const group = new L.featureGroup(routeLayers);
-        disasterMap.fitBounds(group.getBounds().pad(0.15));
+        disasterMap.fitBounds(group.getBounds().pad(0.12));
     }
 }
 
 /**
- * Animated Fleet Vehicle Simulation along safe corridor
+ * Animated Fleet Vehicle Movement Simulation along safe corridor
  */
-function startVehicleMovementSimulation(routePath, vehicleLabel = "AMB-01", vehicleColor = "#10b981") {
-    // Clear existing
+function startVehicleMovementSimulation(routePath, vehicleLabel = "AMB-01", vehicleColor = "#059669") {
+    if (!disasterMap) return;
+
     activeVehicleMarkers.forEach(m => disasterMap.removeLayer(m));
     activeVehicleMarkers = [];
     vehicleAnimationTimers.forEach(t => clearInterval(t));
@@ -173,7 +178,7 @@ function startVehicleMovementSimulation(routePath, vehicleLabel = "AMB-01", vehi
 
     const vMarker = L.marker(routePath[0], { icon: vehicleIcon })
         .addTo(disasterMap)
-        .bindTooltip(`<strong>${vehicleLabel}</strong><br>Status: In-Transit (GPS Live)`, {
+        .bindTooltip(`<strong>${vehicleLabel}</strong><br>Status: GPS Live Transit`, {
             permanent: false,
             direction: 'top'
         });
@@ -182,7 +187,6 @@ function startVehicleMovementSimulation(routePath, vehicleLabel = "AMB-01", vehi
     let step = 0;
     const totalPoints = 120;
     
-    // Interpolate points along the path
     const interpolated = [];
     for (let i = 0; i < routePath.length - 1; i++) {
         const p1 = routePath[i];

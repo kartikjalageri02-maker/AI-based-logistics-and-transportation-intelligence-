@@ -44,16 +44,16 @@ const AIEngine = {
         const clampedScore = Math.min(100, Math.max(1, score));
 
         let tier = "LOW";
-        let tierClass = "bg-slate-700 text-slate-200";
+        let tierClass = "bg-slate-100 text-slate-700 border border-slate-200";
         if (clampedScore >= 80) {
             tier = "CRITICAL (Immediate Action)";
-            tierClass = "bg-red-500/20 text-red-400 border border-red-500/40";
+            tierClass = "bg-red-50 text-red-700 border border-red-200";
         } else if (clampedScore >= 60) {
             tier = "HIGH PRIORITY";
-            tierClass = "bg-amber-500/20 text-amber-400 border border-amber-500/40";
+            tierClass = "bg-amber-50 text-amber-700 border border-amber-200";
         } else if (clampedScore >= 40) {
             tier = "MODERATE";
-            tierClass = "bg-blue-500/20 text-blue-400 border border-blue-500/40";
+            tierClass = "bg-blue-50 text-blue-700 border border-blue-200";
         }
 
         return {
@@ -74,10 +74,10 @@ const AIEngine = {
         const container = document.getElementById(containerId);
         if (!container) return;
 
-        let strokeColor = "#10b981";
-        if (score >= 80) strokeColor = "#ef4444";
-        else if (score >= 60) strokeColor = "#f59e0b";
-        else if (score >= 40) strokeColor = "#3b82f6";
+        let strokeColor = "#059669";
+        if (score >= 80) strokeColor = "#dc2626";
+        else if (score >= 60) strokeColor = "#d97706";
+        else if (score >= 40) strokeColor = "#2563eb";
 
         const radius = 45;
         const circumference = 2 * Math.PI * radius;
@@ -86,13 +86,13 @@ const AIEngine = {
         container.innerHTML = `
             <div class="relative flex items-center justify-center w-28 h-28">
                 <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="${radius}" stroke="#334155" stroke-width="8" fill="transparent" />
+                    <circle cx="50" cy="50" r="${radius}" stroke="#e2e8f0" stroke-width="8" fill="transparent" />
                     <circle class="gauge-circle" cx="50" cy="50" r="${radius}" stroke="${strokeColor}" stroke-width="8" 
                         stroke-dasharray="${circumference}" stroke-dashoffset="${strokeDashoffset}" stroke-linecap="round" fill="transparent" />
                 </svg>
                 <div class="absolute flex flex-col items-center justify-center text-center">
-                    <span class="text-2xl font-bold font-mono text-white">${score}</span>
-                    <span class="text-[10px] text-slate-400 uppercase tracking-wider">Score</span>
+                    <span class="text-2xl font-bold font-mono text-slate-900">${score}</span>
+                    <span class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Severity</span>
                 </div>
             </div>
         `;

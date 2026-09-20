@@ -554,6 +554,28 @@ class DisasterAppHandler(http.server.SimpleHTTPRequestHandler):
             }).encode('utf-8'))
             return
 
+        elif path == "/api/inventory":
+            # Warehouse resource update endpoint
+            for item_key, count in payload.items():
+                if item_key in system_state["inventory"]:
+                    system_state["inventory"][item_key]["total"] = int(count)
+                    system_state["inventory"][item_key]["available"] = int(count)
+            
+            timestamp = time.strftime("%H:%M")
+            system_state["driver_logs"].insert(0, {
+                "time": timestamp,
+                "event": "Warehouse Inventory Updated by Logistics Officer"
+            })
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "status": "SUCCESS",
+                "inventory": system_state["inventory"]
+            }).encode('utf-8'))
+            return
+
         elif path == "/api/reset":
             # Reset to original state
             system_state.clear()

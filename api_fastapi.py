@@ -127,6 +127,14 @@ def get_resource_optimization():
 def get_routes():
     return system_state["routes"]
 
+@app.post("/api/inventory")
+def update_inventory(inventory_data: Dict[str, int]):
+    for item_key, count in inventory_data.items():
+        if item_key in system_state["inventory"]:
+            system_state["inventory"][item_key]["total"] = int(count)
+            system_state["inventory"][item_key]["available"] = int(count)
+    return {"status": "SUCCESS", "inventory": system_state["inventory"]}
+
 @app.post("/api/driver/incident")
 def report_driver_incident(incident: DriverIncidentReport):
     for r in system_state["routes"]:
