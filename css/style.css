@@ -1,0 +1,147 @@
+/* Minimalist White / Light Modern Theme for Disaster Logistics Operations */
+
+:root {
+  --bg-app: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-muted: #f1f5f9;
+  --border-light: #e2e8f0;
+  --border-focus: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --accent-primary: #2563eb;
+  --accent-emerald: #059669;
+  --accent-amber: #d97706;
+  --accent-red: #dc2626;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Subtle scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Minimalist Card */
+.white-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  border-radius: 0.75rem;
+}
+
+.white-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+}
+
+/* Tab Navigation Button */
+.nav-tab-btn {
+  transition: all 0.15s ease-in-out;
+  color: #64748b;
+  font-weight: 500;
+  position: relative;
+}
+
+.nav-tab-btn:hover {
+  color: #0f172a;
+  background-color: #f1f5f9;
+}
+
+.nav-tab-btn.active {
+  color: #2563eb;
+  background-color: #eff6ff;
+  font-weight: 600;
+  border-color: #bfdbfe;
+}
+
+/* Map Styling for Light Mode */
+#map {
+  width: 100%;
+  height: 480px;
+  border-radius: 0.5rem;
+  z-index: 10;
+}
+
+.leaflet-container {
+  background: #f8fafc !important;
+  font-family: inherit;
+}
+
+/* Custom Marker Pins for Light Theme */
+.hub-marker-pin {
+  width: 34px;
+  height: 34px;
+  border-radius: 50% 50% 50% 0;
+  background: #2563eb;
+  position: absolute;
+  transform: rotate(-45deg);
+  left: 50%;
+  top: 50%;
+  margin: -17px 0 0 -17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+  border: 2px solid #ffffff;
+}
+
+.hazard-marker-pin {
+  width: 30px;
+  height: 30px;
+  background: #ef4444;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  border: 2px solid #ffffff;
+}
+
+.vehicle-marker-pin {
+  width: 28px;
+  height: 28px;
+  background: #059669;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+}
+
+/* Pulse animation */
+@keyframes ring-pulse {
+  0% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.animate-pulse-danger {
+  animation: ring-pulse 1.8s infinite;
+}
+
+/* Gauge styling */
+.gauge-circle {
+  transition: stroke-dashoffset 0.8s ease-in-out;
+}
