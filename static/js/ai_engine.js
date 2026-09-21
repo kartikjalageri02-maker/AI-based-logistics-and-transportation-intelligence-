@@ -74,25 +74,31 @@ const AIEngine = {
         const container = document.getElementById(containerId);
         if (!container) return;
 
-        let strokeColor = "#059669";
-        if (score >= 80) strokeColor = "#dc2626";
-        else if (score >= 60) strokeColor = "#d97706";
-        else if (score >= 40) strokeColor = "#2563eb";
+        let stopColor1 = "#10b981", stopColor2 = "#059669";
+        if (score >= 80) { stopColor1 = "#f87171"; stopColor2 = "#dc2626"; }
+        else if (score >= 60) { stopColor1 = "#fbbf24"; stopColor2 = "#d97706"; }
+        else if (score >= 40) { stopColor1 = "#60a5fa"; stopColor2 = "#2563eb"; }
 
-        const radius = 45;
+        const radius = 42;
         const circumference = 2 * Math.PI * radius;
         const strokeDashoffset = circumference - (score / 100) * circumference;
 
         container.innerHTML = `
-            <div class="relative flex items-center justify-center w-28 h-28">
+            <div class="relative flex items-center justify-center w-32 h-32">
                 <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="${radius}" stroke="#e2e8f0" stroke-width="8" fill="transparent" />
-                    <circle class="gauge-circle" cx="50" cy="50" r="${radius}" stroke="${strokeColor}" stroke-width="8" 
+                    <defs>
+                        <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="${stopColor1}" />
+                            <stop offset="100%" stop-color="${stopColor2}" />
+                        </linearGradient>
+                    </defs>
+                    <circle cx="50" cy="50" r="${radius}" stroke="#f1f5f9" stroke-width="8" fill="transparent" />
+                    <circle class="gauge-circle" cx="50" cy="50" r="${radius}" stroke="url(#gaugeGradient)" stroke-width="8" 
                         stroke-dasharray="${circumference}" stroke-dashoffset="${strokeDashoffset}" stroke-linecap="round" fill="transparent" />
                 </svg>
                 <div class="absolute flex flex-col items-center justify-center text-center">
-                    <span class="text-2xl font-bold font-mono text-slate-900">${score}</span>
-                    <span class="text-[10px] text-slate-500 uppercase tracking-wider font-semibold">Severity</span>
+                    <span class="text-3xl font-extrabold font-mono text-slate-900 tracking-tight">${score}</span>
+                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Index / 100</span>
                 </div>
             </div>
         `;

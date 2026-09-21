@@ -129,25 +129,25 @@ const Optimizer = {
         const container = document.getElementById(containerId);
         if (!container) return;
 
-        let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+        let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-5">';
 
         results.allocations.forEach(item => {
             const isTop = item.rank === 1;
-            const badgeColor = isTop ? 'bg-red-50 text-red-700 border-red-200' : 'bg-blue-50 text-blue-700 border-blue-200';
+            const badgeClass = isTop ? 'badge-red' : 'badge-blue';
             
             html += `
-                <div class="white-card p-5 flex flex-col justify-between">
+                <div class="modern-card p-6 flex flex-col justify-between">
                     <div>
-                        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                        <div class="flex items-center justify-between pb-3.5 border-b border-slate-100">
                             <div>
-                                <span class="text-xs px-2.5 py-0.5 rounded-full border font-semibold ${badgeColor}">
+                                <span class="pill-badge ${badgeClass}">
                                     ${item.priorityLabel}
                                 </span>
-                                <h4 class="text-base font-bold text-slate-900 mt-1.5">${item.location.name}</h4>
+                                <h4 class="text-base font-extrabold text-slate-900 mt-1.5">${item.location.name}</h4>
                             </div>
                             <div class="text-right">
-                                <div class="text-xs text-slate-500">AI Severity</div>
-                                <div class="text-lg font-mono font-bold ${isTop ? 'text-red-600' : 'text-amber-600'}">
+                                <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">AI Severity</div>
+                                <div class="text-xl font-mono font-extrabold ${isTop ? 'text-red-600' : 'text-amber-600'}">
                                     ${item.ai.score}/100
                                 </div>
                             </div>
@@ -155,48 +155,49 @@ const Optimizer = {
 
                         <!-- Resource Allocations -->
                         <div class="mt-4">
-                            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5">
-                                <i class="fas fa-boxes-stacked mr-1 text-blue-600"></i> Allocated Relief Quotas
+                            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                                <span><i class="fas fa-boxes-stacked mr-1.5 text-blue-600"></i> Allocated Relief Quotas</span>
+                                <span class="text-[10px] text-emerald-600 font-semibold font-mono">100% Demand Evaluated</span>
                             </div>
-                            <div class="grid grid-cols-2 gap-2 text-xs">
-                                <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex items-center justify-between">
-                                    <span class="text-slate-600"><i class="fas fa-truck-medical text-red-500 mr-1.5"></i> Ambulances:</span>
+                            <div class="grid grid-cols-2 gap-2.5 text-xs">
+                                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center justify-between">
+                                    <span class="text-slate-600 font-medium"><i class="fas fa-truck-medical text-red-500 mr-1.5"></i> Ambulances:</span>
                                     <span class="font-mono font-bold text-slate-900">${item.allocated.ambulances} units</span>
                                 </div>
-                                <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex items-center justify-between">
-                                    <span class="text-slate-600"><i class="fas fa-box-tissue text-amber-500 mr-1.5"></i> Food Packs:</span>
+                                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center justify-between">
+                                    <span class="text-slate-600 font-medium"><i class="fas fa-box-tissue text-amber-500 mr-1.5"></i> Food Packs:</span>
                                     <span class="font-mono font-bold text-slate-900">${item.allocated.food_packs} pk</span>
                                 </div>
-                                <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex items-center justify-between">
-                                    <span class="text-slate-600"><i class="fas fa-pills text-purple-500 mr-1.5"></i> Medicines:</span>
+                                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center justify-between">
+                                    <span class="text-slate-600 font-medium"><i class="fas fa-pills text-purple-500 mr-1.5"></i> Medicines:</span>
                                     <span class="font-mono font-bold text-slate-900">${item.allocated.medicines} kits</span>
                                 </div>
-                                <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex items-center justify-between">
-                                    <span class="text-slate-600"><i class="fas fa-faucet-drip text-cyan-600 mr-1.5"></i> Water:</span>
+                                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100 flex items-center justify-between">
+                                    <span class="text-slate-600 font-medium"><i class="fas fa-faucet-drip text-cyan-600 mr-1.5"></i> Water:</span>
                                     <span class="font-mono font-bold text-slate-900">${item.allocated.water_liters} L</span>
                                 </div>
                             </div>
                             ${item.allocated.boats > 0 ? `
-                                <div class="mt-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100 flex items-center justify-between text-xs">
-                                    <span class="text-slate-600"><i class="fas fa-ship text-cyan-600 mr-1.5"></i> Rescue Boats:</span>
-                                    <span class="font-mono font-bold text-slate-900">${item.allocated.boats} units</span>
+                                <div class="mt-2.5 bg-cyan-50/60 p-2.5 rounded-xl border border-cyan-100 flex items-center justify-between text-xs">
+                                    <span class="text-cyan-800 font-medium"><i class="fas fa-ship text-cyan-600 mr-1.5"></i> Rescue Boats (Submerged Zone):</span>
+                                    <span class="font-mono font-bold text-cyan-950">${item.allocated.boats} units</span>
                                 </div>
                             ` : ''}
                         </div>
 
                         <!-- Specialized Vehicles Assigned -->
                         <div class="mt-4">
-                            <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2.5">
-                                <i class="fas fa-truck-ramp-box mr-1 text-emerald-600"></i> Assigned Vehicles & Heavy Equipment
+                            <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5">
+                                <i class="fas fa-truck-ramp-box mr-1.5 text-emerald-600"></i> Assigned Vehicles & Machinery
                             </div>
                             <div class="space-y-2">
                                 ${item.vehicles.map(v => `
-                                    <div class="bg-white border border-slate-200 p-2 rounded-lg flex items-center justify-between text-xs shadow-2xs">
+                                    <div class="bg-white border border-slate-200/80 p-2.5 rounded-xl flex items-center justify-between text-xs shadow-2xs hover:border-slate-300 transition">
                                         <div class="flex items-center space-x-2.5">
-                                            <i class="fas ${v.icon} ${v.color.replace('text-red-400', 'text-red-600').replace('text-amber-400', 'text-amber-600').replace('text-cyan-400', 'text-cyan-600').replace('text-emerald-400', 'text-emerald-600')}"></i>
-                                            <span class="font-semibold text-slate-800">${v.type} (${v.count})</span>
+                                            <i class="fas ${v.icon} ${v.color.replace('text-red-400', 'text-red-600').replace('text-amber-400', 'text-amber-600').replace('text-cyan-400', 'text-cyan-600').replace('text-emerald-400', 'text-emerald-600')} text-sm"></i>
+                                            <span class="font-bold text-slate-900">${v.type} (${v.count})</span>
                                         </div>
-                                        <span class="text-[11px] text-slate-500">${v.purpose}</span>
+                                        <span class="text-[11px] text-slate-500 font-medium">${v.purpose}</span>
                                     </div>
                                 `).join('')}
                             </div>
@@ -204,11 +205,11 @@ const Optimizer = {
 
                         <!-- Alternative Plan if Constrained -->
                         ${item.alternativePlan ? `
-                            <div class="mt-4 p-3 rounded-lg bg-amber-50/80 border border-amber-200 text-xs">
-                                <div class="text-amber-900 font-semibold flex items-center">
-                                    <i class="fas fa-shuffle mr-1.5 text-amber-600"></i> Automated Alternative Support Plan
+                            <div class="mt-4 p-3.5 rounded-xl bg-amber-50/70 border border-amber-200/80 text-xs">
+                                <div class="text-amber-900 font-bold flex items-center">
+                                    <i class="fas fa-shuffle mr-1.5 text-amber-600"></i> Contingency / Alternative Support Plan
                                 </div>
-                                <p class="text-amber-800 mt-1 text-[11px] leading-relaxed">${item.alternativePlan}</p>
+                                <p class="text-amber-800 mt-1 text-[11px] leading-relaxed font-medium">${item.alternativePlan}</p>
                             </div>
                         ` : ''}
                     </div>

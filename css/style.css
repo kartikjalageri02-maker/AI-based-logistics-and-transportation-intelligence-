@@ -1,38 +1,52 @@
-/* Minimalist White / Light Modern Theme for Disaster Logistics Operations */
+/* ==========================================================================
+   AI Intelligent Disaster Logistics - Modern Enterprise Design System
+   Inspired by modern enterprise UI standards (Linear, Stripe, Apple, Vercel)
+   ========================================================================== */
 
 :root {
   --bg-app: #f8fafc;
-  --bg-card: #ffffff;
-  --bg-card-muted: #f1f5f9;
-  --border-light: #e2e8f0;
-  --border-focus: #cbd5e1;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-  --accent-primary: #2563eb;
+  --surface-card: #ffffff;
+  --surface-elevated: #ffffff;
+  --border-subtle: #f1f5f9;
+  --border-card: rgba(226, 232, 240, 0.85);
+  --border-hover: #cbd5e1;
+  
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-faint: #94a3b8;
+
+  --accent-blue: #2563eb;
+  --accent-blue-soft: #eff6ff;
   --accent-emerald: #059669;
+  --accent-emerald-soft: #ecfdf5;
   --accent-amber: #d97706;
+  --accent-amber-soft: #fffbeb;
   --accent-red: #dc2626;
+  --accent-red-soft: #fef2f2;
+  --accent-purple: #7c3aed;
+  --accent-purple-soft: #f5f3ff;
 }
 
 body {
   background-color: var(--bg-app);
-  color: var(--text-primary);
+  color: var(--text-main);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .mono {
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* Subtle scrollbars */
+/* Subtle modern scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
@@ -42,106 +56,204 @@ body {
   background: #94a3b8;
 }
 
-/* Minimalist Card */
-.white-card {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
-  border-radius: 0.75rem;
+/* Modern Enterprise Surface Card */
+.modern-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-card);
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.white-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+.modern-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: 0 10px 25px -3px rgba(15, 23, 42, 0.06), 0 4px 10px -2px rgba(15, 23, 42, 0.03);
 }
 
-/* Tab Navigation Button */
+/* Glassmorphism Frosted Bar */
+.glass-header {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Segmented Control Navigation */
+.nav-segment-container {
+  background: #f1f5f9;
+  padding: 0.25rem;
+  border-radius: 0.875rem;
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
 .nav-tab-btn {
-  transition: all 0.15s ease-in-out;
-  color: #64748b;
+  padding: 0.5rem 0.875rem;
+  font-size: 0.75rem;
   font-weight: 500;
-  position: relative;
+  color: #64748b;
+  border-radius: 0.625rem;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
 }
 
 .nav-tab-btn:hover {
   color: #0f172a;
-  background-color: #f1f5f9;
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .nav-tab-btn.active {
-  color: #2563eb;
-  background-color: #eff6ff;
+  color: #0f172a;
+  background: #ffffff;
   font-weight: 600;
-  border-color: #bfdbfe;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-/* Map Styling for Light Mode */
+/* Modern Pill Badges */
+.pill-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.badge-emerald {
+  background: var(--accent-emerald-soft);
+  color: var(--accent-emerald);
+  border: 1px solid rgba(5, 150, 105, 0.2);
+}
+
+.badge-amber {
+  background: var(--accent-amber-soft);
+  color: var(--accent-amber);
+  border: 1px solid rgba(217, 119, 6, 0.2);
+}
+
+.badge-red {
+  background: var(--accent-red-soft);
+  color: var(--accent-red);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+.badge-blue {
+  background: var(--accent-blue-soft);
+  color: var(--accent-blue);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+.badge-purple {
+  background: var(--accent-purple-soft);
+  color: var(--accent-purple);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+/* Modern Map Container */
 #map {
   width: 100%;
-  height: 480px;
-  border-radius: 0.5rem;
+  height: 520px;
+  border-radius: 0.875rem;
   z-index: 10;
 }
 
 .leaflet-container {
   background: #f8fafc !important;
-  font-family: inherit;
 }
 
-/* Custom Marker Pins for Light Theme */
+/* Map Marker Pins */
 .hub-marker-pin {
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   border-radius: 50% 50% 50% 0;
-  background: #2563eb;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   position: absolute;
   transform: rotate(-45deg);
   left: 50%;
   top: 50%;
-  margin: -17px 0 0 -17px;
+  margin: -18px 0 0 -18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.4);
   border: 2px solid #ffffff;
 }
 
 .hazard-marker-pin {
-  width: 30px;
-  height: 30px;
-  background: #ef4444;
-  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.45);
   border: 2px solid #ffffff;
+  animation: danger-glow 1.8s infinite;
+}
+
+@keyframes danger-glow {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
 
 .vehicle-marker-pin {
-  width: 28px;
-  height: 28px;
-  background: #059669;
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, #059669, #047857);
   border-radius: 50%;
-  border: 2px solid #ffffff;
+  border: 2.5px solid #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
+  box-shadow: 0 6px 14px rgba(5, 150, 105, 0.35);
 }
 
-/* Pulse animation */
-@keyframes ring-pulse {
-  0% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
-  70% { transform: scale(1); opacity: 1; box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-  100% { transform: scale(0.95); opacity: 0.8; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+/* In-Cab Driver Telemetry Gauge */
+.telemetry-chip {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
 }
 
-.animate-pulse-danger {
-  animation: ring-pulse 1.8s infinite;
+.telemetry-chip:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
-/* Gauge styling */
-.gauge-circle {
-  transition: stroke-dashoffset 0.8s ease-in-out;
+/* Modern Input Styling */
+.modern-input {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  color: #0f172a;
+  transition: all 0.15s ease-in-out;
+}
+
+.modern-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+/* LoRa Radio Wave Animation */
+@keyframes radio-pulse {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 0.4; }
+  100% { transform: scale(0.9); opacity: 0.8; }
+}
+
+.animate-radio-wave {
+  animation: radio-pulse 2s infinite ease-in-out;
 }

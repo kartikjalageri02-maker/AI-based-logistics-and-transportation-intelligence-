@@ -467,23 +467,36 @@ const App = {
             const ai = AIEngine.calculateSeverity(loc);
             const isLoRa = loc.communication_mode?.toLowerCase().includes("lora");
 
+    renderOfficerView() {
+        const historyContainer = document.getElementById('officerReportsHistory');
+        if (!historyContainer) return;
+
+        historyContainer.innerHTML = this.state.locations.map(loc => {
+            const ai = AIEngine.calculateSeverity(loc);
+            const isLoRa = loc.communication_mode?.toLowerCase().includes("lora");
+
             return `
-                <div class="white-card p-4 space-y-2">
-                    <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-                        <h4 class="font-bold text-sm text-slate-900">${loc.name}</h4>
-                        <span class="text-xs px-2 py-0.5 rounded-full font-semibold font-mono ${ai.tierClass}">${ai.score}/100</span>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 text-xs text-slate-600">
-                        <div><strong>Situation:</strong> ${loc.condition}</div>
-                        <div><strong>Road Access:</strong> ${loc.road_condition}</div>
-                        <div><strong>Civilians:</strong> ${loc.affected_people}</div>
-                        <div><strong>Urgency:</strong> ${loc.medical_urgency}/10</div>
-                    </div>
-                    <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                        <span class="text-slate-500 font-mono">
-                            ${isLoRa ? '<i class="fas fa-tower-broadcast text-cyan-600 mr-1"></i> LoRa Gateway Ingest' : '<i class="fas fa-signal text-emerald-600 mr-1"></i> Cellular 4G'}
+                <div class="modern-card p-5 space-y-3">
+                    <div class="flex items-center justify-between pb-2.5 border-b border-slate-100">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                            <h4 class="font-extrabold text-sm text-slate-900">${loc.name}</h4>
+                        </div>
+                        <span class="pill-badge ${ai.score >= 80 ? 'badge-red' : (ai.score >= 60 ? 'badge-amber' : 'badge-blue')}">
+                            ${ai.score}/100 • ${ai.tier.split(' ')[0]}
                         </span>
-                        <span class="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded">Hub Ingested</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2.5 text-xs text-slate-600">
+                        <div class="p-2 rounded-lg bg-slate-50 border border-slate-100"><strong>Situation:</strong> ${loc.condition}</div>
+                        <div class="p-2 rounded-lg bg-slate-50 border border-slate-100"><strong>Road Access:</strong> ${loc.road_condition}</div>
+                        <div class="p-2 rounded-lg bg-slate-50 border border-slate-100"><strong>Civilians:</strong> ${loc.affected_people}</div>
+                        <div class="p-2 rounded-lg bg-slate-50 border border-slate-100"><strong>Urgency:</strong> ${loc.medical_urgency}/10</div>
+                    </div>
+                    <div class="pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
+                        <span class="text-slate-500 font-mono">
+                            ${isLoRa ? '<i class="fas fa-tower-broadcast text-cyan-600 mr-1.5 animate-pulse"></i> LoRa Gateway 868MHz' : '<i class="fas fa-signal text-emerald-600 mr-1.5"></i> Cellular 4G/5G'}
+                        </span>
+                        <span class="pill-badge badge-emerald text-[10px]">Hub Ingested</span>
                     </div>
                 </div>
             `;
@@ -496,35 +509,56 @@ const App = {
         if (!container) return;
 
         const items = [
-            { key: "ambulances", label: "Emergency Ambulances", val: inv.ambulances, icon: "fa-truck-medical", color: "text-red-600", unit: "vehicles" },
-            { key: "trucks", label: "Heavy Supply Trucks", val: inv.trucks, icon: "fa-truck-moving", color: "text-amber-600", unit: "vehicles" },
-            { key: "boats", label: "Rescue Boats", val: inv.boats, icon: "fa-ship", color: "text-cyan-600", unit: "crafts" },
-            { key: "jcbs", label: "JCBs / Excavators", val: inv.jcbs, icon: "fa-trowel-bricks", color: "text-yellow-600", unit: "heavy units" },
-            { key: "small_vehicles", label: "4x4 Recon Vehicles", val: inv.small_vehicles, icon: "fa-car-side", color: "text-emerald-600", unit: "vehicles" },
-            { key: "food_packs", label: "Food & Ration Packs", val: inv.food_packs, icon: "fa-box-tissue", color: "text-orange-600", unit: "packs" },
-            { key: "medicines", label: "Trauma Medicine Kits", val: inv.medicines, icon: "fa-pills", color: "text-purple-600", unit: "kits" },
-            { key: "water_liters", label: "Potable Clean Water", val: inv.water_liters, icon: "fa-faucet-drip", color: "text-blue-600", unit: "liters" },
-            { key: "tents", label: "Emergency Shelters / Tents", val: inv.tents, icon: "fa-campground", color: "text-teal-600", unit: "tents" }
+            { key: "ambulances", label: "Emergency Ambulances", val: inv.ambulances, icon: "fa-truck-medical", color: "text-red-600", bg: "bg-red-50", unit: "units" },
+            { key: "trucks", label: "Heavy Supply Trucks", val: inv.trucks, icon: "fa-truck-moving", color: "text-amber-600", bg: "bg-amber-50", unit: "trucks" },
+            { key: "boats", label: "Rescue Boats", val: inv.boats, icon: "fa-ship", color: "text-cyan-600", bg: "bg-cyan-50", unit: "crafts" },
+            { key: "jcbs", label: "JCBs / Excavators", val: inv.jcbs, icon: "fa-trowel-bricks", color: "text-yellow-600", bg: "bg-yellow-50", unit: "machinery" },
+            { key: "small_vehicles", label: "4x4 Recon Vehicles", val: inv.small_vehicles, icon: "fa-car-side", color: "text-emerald-600", bg: "bg-emerald-50", unit: "vehicles" },
+            { key: "food_packs", label: "Food & Ration Packs", val: inv.food_packs, icon: "fa-box-tissue", color: "text-orange-600", bg: "bg-orange-50", unit: "packs" },
+            { key: "medicines", label: "Trauma Medicine Kits", val: inv.medicines, icon: "fa-pills", color: "text-purple-600", bg: "bg-purple-50", unit: "kits" },
+            { key: "water_liters", label: "Potable Clean Water", val: inv.water_liters, icon: "fa-faucet-drip", color: "text-blue-600", bg: "bg-blue-50", unit: "liters" },
+            { key: "tents", label: "Emergency Shelters / Tents", val: inv.tents, icon: "fa-campground", color: "text-teal-600", bg: "bg-teal-50", unit: "tents" }
         ];
 
-        container.innerHTML = items.map(item => `
-            <div class="white-card p-4 flex items-center justify-between">
-                <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0">
-                        <i class="fas ${item.icon} ${item.color} text-lg"></i>
-                    </div>
+        container.innerHTML = items.map(item => {
+            const pct = Math.min(100, Math.max(0, Math.round((item.val.available / Math.max(1, item.val.total)) * 100)));
+            return `
+                <div class="modern-card p-5 flex flex-col justify-between">
                     <div>
-                        <div class="text-xs font-semibold text-slate-500 uppercase tracking-wider">${item.label}</div>
-                        <div class="text-xl font-bold font-mono text-slate-900 mt-0.5">
-                            ${item.val.available} <span class="text-xs font-normal text-slate-400">/ ${item.val.total} ${item.unit}</span>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-10 h-10 rounded-2xl ${item.bg} flex items-center justify-center shrink-0">
+                                    <i class="fas ${item.icon} ${item.color} text-base"></i>
+                                </div>
+                                <div>
+                                    <div class="text-xs font-extrabold text-slate-900">${item.label}</div>
+                                    <span class="text-[10px] text-slate-400 font-mono">${item.unit}</span>
+                                </div>
+                            </div>
+                            <span class="pill-badge badge-emerald text-[10px]">Active</span>
+                        </div>
+
+                        <div class="mt-4">
+                            <div class="flex items-baseline justify-between">
+                                <div class="text-2xl font-extrabold font-mono text-slate-900">
+                                    ${item.val.available}
+                                </div>
+                                <span class="text-xs font-mono text-slate-400">/ ${item.val.total} total</span>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden mt-2">
+                                <div class="bg-blue-600 h-full rounded-full transition-all duration-700" style="width: ${pct}%"></div>
+                            </div>
+                            <div class="flex justify-between text-[10px] text-slate-400 font-medium mt-1">
+                                <span>${pct}% Available</span>
+                                <span>${item.val.total - item.val.available} Allocated</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <span class="text-xs px-2 py-1 rounded bg-slate-100 text-slate-700 font-mono font-semibold">
-                    READY
-                </span>
-            </div>
-        `).join('');
+            `;
+        }).join('');
 
         // Populate update form inputs with current values
         const form = document.getElementById('inventoryUpdateForm');
