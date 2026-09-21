@@ -190,12 +190,17 @@ const Auth = {
     init() {
         const saved = sessionStorage.getItem('disaster_auth_session');
         if (saved) {
-            this.currentSession = JSON.parse(saved);
-            this.hideAuthModal();
-            this.applyRolePermissions();
-        } else {
-            this.showAuthModal();
+            try {
+                this.currentSession = JSON.parse(saved);
+                if (this.currentSession && this.currentSession.role && this.roleDefinitions[this.currentSession.role]) {
+                    this.hideAuthModal();
+                    this.applyRolePermissions();
+                    return;
+                }
+            } catch (e) {}
+            sessionStorage.removeItem('disaster_auth_session');
         }
+        this.showAuthModal();
     },
 
     showAuthModal() {
@@ -212,25 +217,54 @@ const Auth = {
     selectRole(roleKey) {
         this.selectedRole = roleKey;
         const roleDef = this.roleDefinitions[roleKey];
-        document.getElementById('authStepRole').classList.add('hidden');
-        document.getElementById('authStepCreds').classList.remove('hidden');
-        document.getElementById('selectedRoleDisplay').textContent = roleDef.title;
-        document.getElementById('authError').classList.add('hidden');
-        document.getElementById('inputAuthUser').focus();
+        if (!roleDef) return;
+
+        const roleStep = document.getElementById('authStepRole');
+        const credsStep = document.getElementById('authStepCreds');
+        const roleDisplay = document.getElementById('selectedRoleDisplay');
+        const errEl = document.getElementById('authError');
+
+        if (roleStep) roleStep.classList.add('hidden');
+        if (credsStep) credsStep.classList.remove('hidden');
+        if (roleDisplay) roleDisplay.textContent = roleDef.title;
+        if (errEl) errEl.classList.add('hidden');
+
+        const userInput = document.getElementById('inputAuthUser');
+        const passInput = document.getElementById('inputAuthPass');
+        if (userInput) userInput.value = 'abc';
+        if (passInput) passInput.value = '123';
+        if (userInput) userInput.focus();
     },
 
     goToRoleStep() {
         this.selectedRole = null;
-        document.getElementById('authStepRole').classList.remove('hidden');
-        document.getElementById('authStepCreds').classList.add('hidden');
-        document.getElementById('authError').classList.add('hidden');
+        const roleStep = document.getElementById('authStepRole');
+        const credsStep = document.getElementById('authStepCreds');
+        const errEl = document.getElementById('authError');
+
+        if (roleStep) roleStep.classList.remove('hidden');
+        if (credsStep) credsStep.classList.add('hidden');
+        if (errEl) errEl.classList.add('hidden');
     },
 
     login(username, password) {
-        if (username.trim() === 'abc' && password.trim() === '123' && this.selectedRole) {
+        const user = (username || '').trim().toLowerCase();
+        const pass = (password || '').trim();
+
+        if (!this.selectedRole) {
+            const errEl = document.getElementById('authError');
+            if (errEl) {
+                errEl.textContent = 'Please choose an operational role first!';
+                errEl.classList.remove('hidden');
+            }
+            this.goToRoleStep();
+            return;
+        }
+
+        if (user === 'abc' && pass === '123') {
             const roleDef = this.roleDefinitions[this.selectedRole];
             this.currentSession = {
-                username: username,
+                username: (username || 'abc').trim(),
                 role: this.selectedRole,
                 title: roleDef.title
             };
@@ -239,11 +273,13 @@ const Auth = {
             this.applyRolePermissions();
             App.switchDashboard(roleDef.defaultTab);
             AudioController.playSuccessChime();
-            DriverSim.showToast(`Welcome ${roleDef.title}! Logged in as ${username}.`, 'success');
+            DriverSim.showToast(`Welcome ${roleDef.title}! Authenticated as ${this.currentSession.username}.`, 'success');
         } else {
             const errEl = document.getElementById('authError');
-            errEl.textContent = 'Invalid credentials! Use demo username "abc" and password "123".';
-            errEl.classList.remove('hidden');
+            if (errEl) {
+                errEl.textContent = 'Invalid credentials! Use demo username "abc" and password "123".';
+                errEl.classList.remove('hidden');
+            }
             AudioController.playHazardAlert();
         }
     },
@@ -285,14 +321,16 @@ const Auth = {
     }
 };
 
+window.Auth = Auth;
+
 const App = {
     state: null,
     currentDashboard: 'admin',
 
     async init() {
+        Auth.init();
         await this.fetchStatus();
         DriverSim.init();
-        Auth.init();
         this.setupRouter();
         this.setupForms();
         this.startClock();
@@ -458,14 +496,6 @@ const App = {
             `).join('');
         }
     },
-
-    renderOfficerView() {
-        const historyContainer = document.getElementById('officerReportsHistory');
-        if (!historyContainer) return;
-
-        historyContainer.innerHTML = this.state.locations.map(loc => {
-            const ai = AIEngine.calculateSeverity(loc);
-            const isLoRa = loc.communication_mode?.toLowerCase().includes("lora");
 
     renderOfficerView() {
         const historyContainer = document.getElementById('officerReportsHistory');
