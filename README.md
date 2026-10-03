@@ -146,10 +146,4 @@ sih/
 
 ---
 
-## 🏆 Presentation & Live Demo Highlights
-When presenting to evaluators or judges:
-1. **Show GIS Navigation**: Point out Route 1 (Safe), Route 2 (Alternative), and Route 3 (Blocked Landslide) with the animated ambulance in transit.
-2. **LoRa Remote Gateway**: Point out the LoRa terminal decoding packets from remote Chamoli with zero cellular coverage.
-3. **AI Severity Scoring**: Open "+ New Field Report", add an urgent flood area, and watch the AI severity gauge instantly update and rank priorities.
-4. **Scarcity Optimization**: Point out how the 3 available ambulances are optimally divided between locations, generating an automated alternative plan for the remainder.
-5. **Interactive Feedback Loop**: In the Driver terminal, click **"Report Hazard"** — notice the audible alarm, the route updates to BLOCKED, and the hub dynamically reroutes the entire fleet!
+
